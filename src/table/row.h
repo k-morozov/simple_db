@@ -21,24 +21,15 @@ std::ostream& operator<<(std::ostream& stream, const NullAttribute& arg) {
 	return stream;
 }
 
+inline
+bool operator==(const NullAttribute& lhs, const NullAttribute& rhs) {
+	return true;
+}
+
 using PageIndex = size_t;
 using RowIndex = size_t;
 
 using Row = std::vector<std::variant<NullAttribute, bool, uint64_t>>;
-
-inline
-bool operator==(const Row& lhs, const Row& rhs) {
-	if (lhs.size() != rhs.size()) {
-		return false;
-	}
-
-	for (size_t i=0; i<lhs.size(); i++) {
-//		if (lhs[i]. != rhs[i]) {
-//			return false;
-//		}
-	}
-	return true;
-}
 
 struct RowID final {
 	PageIndex page_index;
