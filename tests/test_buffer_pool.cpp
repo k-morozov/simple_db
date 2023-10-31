@@ -16,13 +16,13 @@ TEST(HelloTest, BasicAssertions) {
 	EXPECT_EQ(7 * 6, 42);
 }
 
-TEST(SimpleTest, BasicInsertion) {
+TEST(SimpleTest, BasicInsertionOneRow) {
 	auto store = sdb::make_store(5, "");
 	auto schema = std::make_shared<sdb::Schema>(sdb::Schema{
 			sdb::Column{
 					.name="id",
 					.type=sdb::Type::uint64_t,
-					.length=4
+					.length=8
 			},
 			sdb::Column{
 					.name="status",
@@ -32,16 +32,16 @@ TEST(SimpleTest, BasicInsertion) {
 			sdb::Column{
 					.name="number",
 					.type=sdb::Type::uint64_t,
-					.length=4
+					.length=8
 			},
 	});
 	auto table = store->connect_table("test_db", schema);
 
 	std::unordered_map<sdb::tb::RowID, sdb::tb::Row> expected_row_ids;
-	for(size_t i=0; i<1; i++) {
+	for(size_t i=0; i<10; i++) {
 		auto row = sdb::tb::Row{
-				i,
-				i % 2,
+				10 + i,
+				static_cast<bool>(i % 2),
 				100 + i,
 		};
 		const auto row_id = table->insert_row(row);

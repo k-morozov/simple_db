@@ -14,6 +14,7 @@ template<typename T>
 void serialize_value(const T& src, uint8_t*& dest) {
 	std::memcpy(dest, &src, sizeof(T));
 	dest += sizeof(T);
+	assert(sizeof (T) == sizeof(src));
 }
 
 template<typename T>
@@ -46,10 +47,8 @@ size_t calculate_row_space(const SchemaPtr& schema) {
 	for(const auto& column : *schema) {
 		switch (column.type) {
 			case Type::boolean:
-				result += sizeof(uint8_t);
-				break;
 			case Type::uint64_t:
-				result += sizeof(uint64_t);
+				result += column.length;
 				break;
 			default:
 				throw std::invalid_argument("unsupported column type");
@@ -64,9 +63,9 @@ sdb::Marshal::Marshal(SchemaPtr schema) :
 {}
 
 void Marshal::serialize_row(uint8_t* data, const tb::Row &row) const {
-	for (auto i : row) {
+	for (auto value : row) {
 		uint8_t* old_data = data;
-		std::visit(RowVisit{data}, i);
+		std::visit(RowVisit{data}, value);
 		assert(old_data != data);
 	}
 }
@@ -74,6 +73,7 @@ void Marshal::serialize_row(uint8_t* data, const tb::Row &row) const {
 tb::Row Marshal::deserialize_row(uint8_t *data) const {
 	tb::Row result_row;
 	for (const auto& column : *schema_) {
+		uint8_t* old_data = data;
 		switch (column.type) {
 			case Type::boolean:
 			{
@@ -81,7 +81,6 @@ tb::Row Marshal::deserialize_row(uint8_t *data) const {
 				result_row.emplace_back(field);
 				break;
 			}
-
 			case Type::uint64_t:
 			{
 				const auto field = deserialize_value<uint64_t>(data);
@@ -91,6 +90,7 @@ tb::Row Marshal::deserialize_row(uint8_t *data) const {
 			default:
 				throw std::runtime_error("unsupported type");
 		}
+		assert(old_data != data);
 	}
 	return result_row;
 }
