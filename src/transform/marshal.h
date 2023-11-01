@@ -18,6 +18,7 @@ class Marshal final {
 public:
 	explicit Marshal(SchemaPtr schema);
 
+	[[nodiscard]]
 	size_t fixed_row_space() const { return fixed_row_space_; }
 
 	void serialize_row(uint8_t* data, const tb::Row& row) const;
