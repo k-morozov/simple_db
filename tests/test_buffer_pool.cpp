@@ -10,9 +10,9 @@
 
 sdb::tb::Row create_row(size_t i) {
 	return sdb::tb::Row{
-			10 + i,
+			10u + i,
 			static_cast<bool>(i % 2),
-			100 + i,
+			100u + i,
 	};
 }
 
@@ -22,7 +22,7 @@ protected:
 
 public:
 		void SetUp() override {
-		auto store = sdb::make_store(5, "");
+		auto store = sdb::make_store(10, "");
 		auto schema = std::make_shared<sdb::Schema>(sdb::Schema{
 				sdb::Column{
 						.name="id",
@@ -53,22 +53,37 @@ class TableParametrizedFixture :
 		public ::testing::WithParamInterface<std::tuple<int, int>>
 {};
 
+struct Params {
+	size_t insert_count;
+	size_t get_count;
+};
+
+std::tuple<size_t, size_t> ConvertFromParam(const Params& p) {
+	return std::make_tuple(p.insert_count, p.get_count);
+}
+
 INSTANTIATE_TEST_SUITE_P(
 		BasicInsertion,
 		TableParametrizedFixture,
 		::testing::Values(
-				std::make_tuple<int, int>(1, 1),
-				std::make_tuple<int, int>(1, 10),
-				std::make_tuple<int, int>(100'000, 1),
-				std::make_tuple<int, int>(100'000, 100'000)
+				ConvertFromParam({
+					.insert_count=1,
+					.get_count=1}),
+				ConvertFromParam({
+					.insert_count=1,
+					.get_count=10}),
+				ConvertFromParam({
+					.insert_count=10'000,
+					.get_count=1}),
+				ConvertFromParam({
+					.insert_count=10'000,
+					.get_count=10'000})
 		));
 
 TEST_P(TableParametrizedFixture, InsertAndGetRow) {
 	std::unordered_map<sdb::tb::RowID, sdb::tb::Row> expected_row_ids;
 
-	const auto params = GetParam();
-	const size_t insert_count = get<0>(params);
-	const size_t get_count = get<1>(params);
+	const auto [insert_count, get_count] = GetParam();
 
 	for(size_t i=0; i<insert_count; i++) {
 		auto row = create_row(i);
