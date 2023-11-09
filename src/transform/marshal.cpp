@@ -14,7 +14,6 @@ template<typename T>
 void serialize_value(const T& src, uint8_t*& dest) {
 	std::memcpy(dest, &src, sizeof(T));
 	dest += sizeof(T);
-	assert(sizeof (T) == sizeof(src));
 }
 
 template<typename T>
@@ -27,14 +26,10 @@ T deserialize_value(uint8_t*& src) {
 
 struct RowVisit {
 	explicit RowVisit(uint8_t*& data) : data_(data) {}
-	void operator()(tb::NullAttribute) {
-		throw std::runtime_error("not implemented");
-	};
-	void operator()(bool value) {
-		serialize_value<bool>(value, data_);
-	};
-	void operator()(uint64_t value) {
-		serialize_value<uint64_t>(value, data_);
+
+	template<typename T>
+	void operator()(T value) {
+		serialize_value<T>(std::move(value), data_);
 	};
 private:
 	uint8_t*& data_;
@@ -62,7 +57,7 @@ sdb::Marshal::Marshal(SchemaPtr schema) :
 	fixed_row_space_(calculate_row_space(schema_))
 {}
 
-void Marshal::serialize_row(uint8_t* data, const tb::Row &row) const {
+void Marshal::serialize_row(uint8_t* data, const tb::Row &row) {
 	for (auto value : row) {
 		uint8_t* old_data = data;
 		std::visit(RowVisit{data}, value);

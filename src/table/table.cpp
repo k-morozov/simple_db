@@ -36,7 +36,6 @@ public:
 				};
 			}
 		}
-		throw std::runtime_error("broken Table::insert_row");
 	}
 
 	Row get_row(const RowID& id) override {

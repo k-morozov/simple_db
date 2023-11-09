@@ -36,7 +36,7 @@ private:
 	const std::filesystem::path path_;
 };
 
-StorePtr make_store(size_t frame_count, const std::filesystem::path& path) {
+StorePtr make_store(const size_t frame_count, const std::filesystem::path& path) {
 	return std::make_shared<Store>(frame_count, path);
 }
 

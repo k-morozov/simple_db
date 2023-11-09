@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory>
 
 #include <table/schema.h>
@@ -19,9 +20,12 @@ public:
 	explicit Marshal(SchemaPtr schema);
 
 	[[nodiscard]]
-	size_t fixed_row_space() const { return fixed_row_space_; }
+	size_t fixed_row_space() const {
+		assert(fixed_row_space_ != 0);
+		return fixed_row_space_;
+	}
 
-	void serialize_row(uint8_t* data, const tb::Row& row) const;
+	static void serialize_row(uint8_t* data, const tb::Row& row);
 
 	[[nodiscard]]
 	tb::Row deserialize_row(uint8_t* data) const;
