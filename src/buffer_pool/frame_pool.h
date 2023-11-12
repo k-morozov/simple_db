@@ -19,7 +19,7 @@ class IFramePool {
 public:
 	virtual ~IFramePool() = default;
 
-	virtual std::pair<PageIndex, uint8_t *> acquire_frame(FilePtr file, PageIndex index) = 0;
+	virtual std::pair<FrameIndex, uint8_t *> acquire_frame(FilePtr file, PageIndex index) = 0;
 	virtual void release_frame(PageIndex index) = 0;
 };
 

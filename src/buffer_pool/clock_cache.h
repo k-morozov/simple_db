@@ -31,10 +31,10 @@ public:
 		const BufferID buf_id = buffer_table_layer_[key];
 		buffer_descriptors_layer_[buf_id].chance = true;
 
-		return std::make_pair(buffer_descriptors_layer_[buf_id].value, true);
+		return std::make_pair(buf_id, true);
 	}
 
-	FrameIndex put(const TKey& key, const TValue& value) {
+	FrameIndex put(const TKey& key) {
 		for(;;increase()) {
 			if (buffer_descriptors_layer_[cursor_].lock) {
 				continue;
@@ -49,13 +49,14 @@ public:
 		buffer_table_layer_.erase(old_key);
 
 		buffer_descriptors_layer_[cursor_].tag = key;
-		buffer_descriptors_layer_[cursor_].value = value;
 		buffer_descriptors_layer_[cursor_].chance = true;
 
 		buffer_table_layer_[key] = cursor_;
 
+		FrameIndex result = cursor_;
 		increase();
-		return cursor_;
+
+		return result;
 	}
 
 	void lock(const FrameIndex index) {
@@ -73,8 +74,6 @@ private:
 
 	struct BufferDescriptor final {
 		TKey tag;
-		TValue value;
-
 		bool chance{false};
 		bool lock{false};
 	};

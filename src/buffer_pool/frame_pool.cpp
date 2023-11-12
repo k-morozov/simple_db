@@ -32,19 +32,19 @@ public:
 		free(data_);
 	}
 
-	std::pair<FrameIndex, uint8_t *> acquire_frame(FilePtr file, PageIndex external_frame_index) override {
+	std::pair<FrameIndex, uint8_t *> acquire_frame(FilePtr file, const PageIndex page_index) override {
 		FrameIndex frame_index;
 
-		const auto key = std::make_pair(file->get_fd(), external_frame_index);
+		const auto key = std::make_pair(file->get_fd(), page_index);
 
 		if (auto [index, found] = cache_.get(key); found) {
 			frame_index = index;
 		} else {
-			const FrameIndex index_update_frame = cache_.put(key, external_frame_index);
+			const FrameIndex index_update_frame = cache_.put(key);
 			dump_frame(index_update_frame);
 
 			frame_index = index_update_frame;
-			restore_frame(file, frame_index, external_frame_index);
+			restore_frame(file, frame_index, page_index);
 		}
 
 		if (++frames_[frame_index].ref_count == 1) {

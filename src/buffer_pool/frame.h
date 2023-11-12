@@ -21,7 +21,9 @@ struct Frame final {
 	}
 
 	void upload() {
-
+		if (owner) {
+			owner->read(page_index, data);
+		}
 	}
 };
 

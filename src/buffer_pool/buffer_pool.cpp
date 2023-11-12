@@ -15,8 +15,8 @@ public:
 
 	~BufferPool() override = default;
 
-	PoolPagePtr get_page(FilePtr file, PageIndex index) override {
-		const auto [frame_index, page_data] = frame_pool_->acquire_frame(std::move(file), index);
+	PoolPagePtr get_page(FilePtr file, PageIndex page_index) override {
+		const auto [frame_index, page_data] = frame_pool_->acquire_frame(std::move(file), page_index);
 		return PoolPage::make_page(frame_pool_, frame_index, page_data);
 	}
 
