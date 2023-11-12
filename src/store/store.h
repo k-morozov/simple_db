@@ -22,6 +22,9 @@ public:
 	virtual ~IStore() = default;
 
 	virtual tb::TablePtr connect_table(const std::filesystem::path & name, SchemaPtr schema) = 0;
+
+	virtual bool exists(const std::filesystem::path & name) = 0;
+	virtual void drop(const std::filesystem::path & name) = 0;
 };
 
 } // namespace sdb

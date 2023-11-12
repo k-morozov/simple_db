@@ -24,7 +24,7 @@ public:
 	RowID insert_row(const Row &row) override {
 		for(;;current_page_index_++) {
 			if (current_page_index_ == get_page_count()) {
-				current_page_index_ = file_->alloc_page();
+				current_page_index_ = file_->alloc_page(); // @TODO
 			}
 
 			auto page = get_page(current_page_index_);

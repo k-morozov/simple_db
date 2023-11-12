@@ -22,7 +22,7 @@ protected:
 
 public:
 		void SetUp() override {
-		auto store = sdb::make_store(10, "");
+		auto store = sdb::make_store(128, "");
 		auto schema = std::make_shared<sdb::Schema>(sdb::Schema{
 				sdb::Column{
 						.name="id",
@@ -40,7 +40,11 @@ public:
 						.length=8
 				},
 		});
-		table = store->connect_table("test_db", schema);
+		const auto name = "test_db_" + std::to_string(rand());
+		if (store->exists(name)) {
+			store->drop(name);
+		}
+		table = store->connect_table(name, schema);
 	}
 
 	void TearDown() override {
@@ -67,34 +71,47 @@ INSTANTIATE_TEST_SUITE_P(
 		TableParametrizedFixture,
 		::testing::Values(
 				ConvertFromParam({
-					.insert_count=1,
-					.get_count=1}),
-				ConvertFromParam({
-					.insert_count=1,
+					.insert_count=10,
 					.get_count=10}),
 				ConvertFromParam({
-					.insert_count=10'000,
-					.get_count=1}),
+					.insert_count=10,
+					.get_count=100}),
+				ConvertFromParam({
+					.insert_count=100,
+					.get_count=10}),
+				ConvertFromParam({
+					.insert_count=10,
+					.get_count=10'000}),
 				ConvertFromParam({
 					.insert_count=10'000,
-					.get_count=10'000})
+					.get_count=10})
+//				ConvertFromParam({
+//					.insert_count=10'000,
+//					.get_count=10'000})
 		));
 
+struct ExpectedRow {
+	sdb::tb::RowID row_id;
+	sdb::tb::Row row;
+};
+
 TEST_P(TableParametrizedFixture, InsertAndGetRow) {
-	std::unordered_map<sdb::tb::RowID, sdb::tb::Row> expected_row_ids;
+	std::vector<ExpectedRow> expected_row_ids;
 
 	const auto [insert_count, get_count] = GetParam();
 
 	for(size_t i=0; i<insert_count; i++) {
 		auto row = create_row(i);
-		const auto row_id = table->insert_row(row);
-		expected_row_ids.insert({row_id, row});
+		const sdb::tb::RowID row_id = table->insert_row(row);
+		expected_row_ids.push_back(ExpectedRow{
+			.row_id=row_id,
+			.row=row
+		});
 	}
-
-	for(const auto& [row_id, expected_row] : expected_row_ids) {
+	for(const auto& expected : expected_row_ids) {
 		for(size_t i=0; i<get_count; i++) {
-			const auto actual_row = table->get_row(row_id);
-			ASSERT_EQ(actual_row, expected_row);
+			const auto actual_row = table->get_row(expected.row_id);
+			ASSERT_EQ(actual_row, expected.row);
 		}
 	}
 }

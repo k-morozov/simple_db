@@ -31,6 +31,13 @@ public:
 		return tb::make_table(buffer_pool_, file, make_fixed_page_provider(std::move(schema)));
 	}
 
+	bool exists(const std::filesystem::path & name) override {
+		return std::filesystem::exists(path_ / name);
+	}
+	void drop(const std::filesystem::path & name) override {
+		std::filesystem::remove(path_ / name);
+	}
+
 private:
 	bp::BufferPoolPtr buffer_pool_;
 	const std::filesystem::path path_;

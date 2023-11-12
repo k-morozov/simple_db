@@ -24,47 +24,47 @@ public:
 	}
 	~ClockCache() = default;
 
-	std::pair<FrameIndex, bool> get(const TKey& key) {
+	std::pair<TValue, bool> get(const TKey& key) {
 		if (!buffer_table_layer_.contains(key)) {
 			return std::make_pair(0, false);
 		}
 		const BufferID buf_id = buffer_table_layer_[key];
-		buffer_descriptors_layer_[buf_id].chance = true;
+		buffer_descriptors_layer_[buf_id].usage++;
 
 		return std::make_pair(buf_id, true);
 	}
 
-	FrameIndex put(const TKey& key) {
+	TValue put(const TKey& key) {
 		for(;;increase()) {
 			if (buffer_descriptors_layer_[cursor_].lock) {
 				continue;
 			}
-			if (buffer_descriptors_layer_[cursor_].chance == false) {
+			if (buffer_descriptors_layer_[cursor_].usage == 0) {
 				break;
 			}
-			buffer_descriptors_layer_[cursor_].chance = false;
+			buffer_descriptors_layer_[cursor_].usage--;
 		}
 
 		const TKey old_key = buffer_descriptors_layer_[cursor_].tag;
 		buffer_table_layer_.erase(old_key);
 
 		buffer_descriptors_layer_[cursor_].tag = key;
-		buffer_descriptors_layer_[cursor_].chance = true;
+		buffer_descriptors_layer_[cursor_].usage = 1;
 
 		buffer_table_layer_[key] = cursor_;
 
-		FrameIndex result = cursor_;
+		TValue result = cursor_;
 		increase();
 
 		return result;
 	}
 
-	void lock(const FrameIndex index) {
+	void lock(const TValue index) {
 		assert(index < capacity_);
 		buffer_descriptors_layer_[index].lock = true;
 	}
 
-	void unlock(const FrameIndex index) {
+	void unlock(const TValue index) {
 		assert(index < capacity_);
 		buffer_descriptors_layer_[index].lock = false;
 	}
@@ -74,7 +74,7 @@ private:
 
 	struct BufferDescriptor final {
 		TKey tag;
-		bool chance{false};
+		size_t usage{0};
 		bool lock{false};
 	};
 

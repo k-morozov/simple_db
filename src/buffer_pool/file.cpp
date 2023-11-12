@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <utils/utils.h>
+#include <cassert>
 
 namespace sdb::bp {
 
@@ -63,17 +64,19 @@ void File::alloc() {
 	size += PageSize;
 }
 
-void File::write(sdb::bp::PageIndex page, const uint8_t *const data) {
-	const size_t offset = page * PageSize;
+void File::write(sdb::bp::PageIndex index, const uint8_t *const data) {
+	const long offset = index * PageSize;
 	const size_t r = pwrite(fd, data, PageSize, offset);
+	assert(r == PageSize);
 	if (r == -1) {
 		throw std::runtime_error("failed pwrite");
 	}
 }
 
-void File::read(PageIndex page, uint8_t * data) {
-	const size_t offset = page * PageSize;
+void File::read(PageIndex index, uint8_t * data) {
+	const long offset = index * PageSize;
 	const size_t r = pread(fd, data, PageSize, offset);
+	assert(r == PageSize);
 	if (r == -1) {
 		throw std::runtime_error("failed pread");
 	}
@@ -88,7 +91,8 @@ FilePtr File::open_file(const std::filesystem::path &path) {
 }
 
 size_t File::get_page_count() const {
-	return size / PageSize;
+	// @TODO thinks
+	return (size + PageSize - 1) / PageSize;
 }
 
 } // namespace sdb::bp
