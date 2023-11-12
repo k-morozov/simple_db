@@ -19,17 +19,21 @@ public:
 
 	~File();
 
-	int get_fd() const;
+	FileFD get_fd() const;
 
 	PageIndex alloc_page();
 
 	size_t get_page_count() const;
 
+	void write(PageIndex page, const uint8_t* const data);
+
+	void read(PageIndex page, uint8_t* data);
+
 protected:
 	explicit File(const std::filesystem::path& path, int flags);
 
 private:
-	int fd = -1;
+	FileFD fd = -1;
 	long size{};
 
 	long discover_size() const;

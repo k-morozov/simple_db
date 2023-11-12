@@ -4,13 +4,25 @@
 
 #pragma once
 
+#include <cassert>
+
 namespace sdb::bp {
 
 struct Frame final {
 	uint8_t* data;
 	FilePtr owner;
-	PageIndex index;
+	PageIndex page_index;
 	size_t ref_count;
+
+	void dump() {
+		if (owner) {
+			owner->write(page_index, data);
+		}
+	}
+
+	void upload() {
+
+	}
 };
 
 } // namespace sdb::bp

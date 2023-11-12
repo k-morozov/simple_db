@@ -51,7 +51,7 @@ int File::get_fd() const {
 }
 
 PageIndex File::alloc_page() {
-	size_t page_index = size / PageSize;
+	const size_t page_index = size / PageSize;
 	alloc();
 	return page_index;
 }
@@ -61,6 +61,22 @@ void File::alloc() {
 		throw std::invalid_argument("broken alloc for new page in file");
 	}
 	size += PageSize;
+}
+
+void File::write(sdb::bp::PageIndex page, const uint8_t *const data) {
+	const size_t offset = page * PageSize;
+	const size_t r = pwrite(fd, data, PageSize, offset);
+	if (r == -1) {
+		throw std::runtime_error("failed pwrite");
+	}
+}
+
+void File::read(PageIndex page, uint8_t * data) {
+	const size_t offset = page * PageSize;
+	const size_t r = pread(fd, data, PageSize, offset);
+	if (r == -1) {
+		throw std::runtime_error("failed pread");
+	}
 }
 
 FilePtr File::create_file(const std::filesystem::path &path) {
@@ -74,6 +90,5 @@ FilePtr File::open_file(const std::filesystem::path &path) {
 size_t File::get_page_count() const {
 	return size / PageSize;
 }
-
 
 } // namespace sdb::bp
