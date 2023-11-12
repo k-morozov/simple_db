@@ -15,13 +15,13 @@ class PoolPage {
 public:
 	static PoolPagePtr make_page(FramePoolPtr owner, PageIndex index, uint8_t* data);
 
-	~PoolPage() = default;
+	~PoolPage();
 
 	uint8_t* get_data();
 
 private:
-	FramePoolPtr owner_;
-	const PageIndex index_;
+	FramePoolPtr pool_;
+	const PageIndex frame_index_;
 	uint8_t* data_frame_;
 
 protected:

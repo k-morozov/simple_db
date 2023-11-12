@@ -32,10 +32,12 @@ using RowIndex = size_t;
 using Row = std::vector<std::variant<NullAttribute, bool, uint64_t>>;
 
 struct RowID final {
-	PageIndex page_index;
-	RowIndex row_index;
+	PageIndex page_index{0};
+	RowIndex row_index{0};
 
-	bool operator==(const RowID&) const = default;
+	bool operator==(const RowID& v) const {
+		return page_index == v.page_index && row_index == v.row_index;
+	}
 };
 
 } // namespace sdb::tb

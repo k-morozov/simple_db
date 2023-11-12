@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <utils/utils.h>
+#include <cassert>
 
 namespace sdb::bp {
 
@@ -51,7 +52,7 @@ int File::get_fd() const {
 }
 
 PageIndex File::alloc_page() {
-	size_t page_index = size / PageSize;
+	const size_t page_index = size / PageSize;
 	alloc();
 	return page_index;
 }
@@ -63,6 +64,24 @@ void File::alloc() {
 	size += PageSize;
 }
 
+void File::write(sdb::bp::PageIndex index, const uint8_t *const data) {
+	const long offset = index * PageSize;
+	const size_t r = pwrite(fd, data, PageSize, offset);
+	assert(r == PageSize);
+	if (r == -1) {
+		throw std::runtime_error("failed pwrite");
+	}
+}
+
+void File::read(PageIndex index, uint8_t * data) {
+	const long offset = index * PageSize;
+	const size_t r = pread(fd, data, PageSize, offset);
+	assert(r == PageSize);
+	if (r == -1) {
+		throw std::runtime_error("failed pread");
+	}
+}
+
 FilePtr File::create_file(const std::filesystem::path &path) {
 	return std::make_shared<utils::ConstructFromProtected<File>>(path, O_CREAT | O_EXCL);
 }
@@ -72,8 +91,8 @@ FilePtr File::open_file(const std::filesystem::path &path) {
 }
 
 size_t File::get_page_count() const {
-	return size / PageSize;
+	// @TODO thinks
+	return (size + PageSize - 1) / PageSize;
 }
-
 
 } // namespace sdb::bp

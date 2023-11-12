@@ -34,7 +34,7 @@ Row FixedTablePage::get_row(const RowIndex index) {
 		uint8_t* row_data = row_header + 1;
 		return marshal_->deserialize_row(row_data);
 	}
-	return sdb::tb::Row();
+	return {};
 }
 
 std::pair<bool, RowIndex> FixedTablePage::find_free_slot() const {

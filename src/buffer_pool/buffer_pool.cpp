@@ -7,7 +7,7 @@
 
 namespace sdb::bp {
 
-class BufferPool : public IBufferPool {
+class BufferPool final : public IBufferPool {
 public:
 	explicit BufferPool(size_t frame_count) :
 		frame_pool_(make_frame_pool(frame_count))
@@ -15,9 +15,9 @@ public:
 
 	~BufferPool() override = default;
 
-	PoolPagePtr get_page(FilePtr file, PageIndex index) override {
-		const auto [page_index, page_data] = frame_pool_->acquire_frame(std::move(file), index);
-		return PoolPage::make_page(frame_pool_, page_index, page_data);
+	PoolPagePtr get_page(FilePtr file, PageIndex page_index) override {
+		const auto [frame_index, page_data] = frame_pool_->acquire_frame(std::move(file), page_index);
+		return PoolPage::make_page(frame_pool_, frame_index, page_data);
 	}
 
 private:

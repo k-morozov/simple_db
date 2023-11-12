@@ -27,7 +27,7 @@ private:
 
 	std::pair<bool, RowIndex> find_free_slot() const;
 
-	RowIndex max_row_index() const { return bp::PageSize / marshal_->fixed_row_space(); }
+	RowIndex max_row_index() const { return bp::PageSize / (1 + marshal_->fixed_row_space()); }
 
 	uint8_t* data_by_index(RowIndex index) const;
 };
