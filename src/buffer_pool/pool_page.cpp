@@ -7,7 +7,7 @@
 
 namespace sdb::bp {
 
-PoolPage::PoolPage(FramePoolPtr owner, PageIndex frame_index, uint8_t* data) :
+PoolPage::PoolPage(FramePoolPtr owner, const PageIndex frame_index, uint8_t* data) :
 	pool_(std::move(owner)),
 	frame_index_(frame_index),
 	data_frame_(data)
@@ -17,7 +17,7 @@ uint8_t *PoolPage::get_data() {
 	return data_frame_;
 }
 
-PoolPagePtr PoolPage::make_page(FramePoolPtr owner, PageIndex frame_index, uint8_t *data) {
+PoolPagePtr PoolPage::make_page(FramePoolPtr owner, const PageIndex frame_index, uint8_t *data) {
 	return utils::ConstructFromProtected<PoolPage>::make(std::move(owner), frame_index, data);
 }
 

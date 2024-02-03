@@ -16,7 +16,7 @@ public:
 	{}
 
 	template<typename ...Args>
-	static std::shared_ptr<ConstructFromProtected<T>> make(Args&& ...args) {
+	static std::shared_ptr<T> make(Args&& ...args) {
 		return std::make_shared<ConstructFromProtected<T>>(std::forward<Args>(args)...);
 	}
 };

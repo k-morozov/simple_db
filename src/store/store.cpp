@@ -11,7 +11,7 @@
 
 namespace sdb {
 
-class Store : public IStore {
+class Store final: public IStore {
 public:
 	explicit Store(const size_t frame_count, const std::filesystem::path& path):
 		buffer_pool_(bp::make_buffer_pool(frame_count)),

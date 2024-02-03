@@ -35,7 +35,7 @@ public:
 	std::pair<FrameIndex, uint8_t *> acquire_frame(FilePtr file, const PageIndex page_index) override {
 		FrameIndex frame_index;
 
-		const auto key = std::make_pair(file->get_fd(), page_index);
+		const PageID key = std::make_pair(file->get_fd(), page_index);
 
 		if (auto [index, found] = cache_.get(key); found) {
 			frame_index = index;
@@ -74,17 +74,17 @@ private:
 
 	void dump_frame(const FrameIndex internal_pool_index) {
 		assert(internal_pool_index < frames_.size());
-		frames_[internal_pool_index].dump();
+		frames_[internal_pool_index].dump_data();
 	}
 
-	void read_frame(FilePtr file, const FrameIndex internal_pool_index, const PageIndex external_frame_index) {
-		assert(internal_pool_index < frames_.size());
+	void read_frame(FilePtr file, const FrameIndex frame_index, const PageIndex page_index) {
+		assert(frame_index < frames_.size());
 
-		frames_[internal_pool_index].owner = std::move(file);
-		frames_[internal_pool_index].ref_count = 0;
-		frames_[internal_pool_index].page_index = external_frame_index;
+		frames_[frame_index].owner = std::move(file);
+		frames_[frame_index].ref_count = 0;
+		frames_[frame_index].page_index = page_index;
 
-		frames_[internal_pool_index].upload();
+		frames_[frame_index].upload_data();
 	}
 };
 

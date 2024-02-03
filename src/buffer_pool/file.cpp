@@ -65,8 +65,8 @@ void File::alloc() {
 }
 
 void File::write(sdb::bp::PageIndex index, const uint8_t *const data) {
-	const long offset = index * PageSize;
-	const size_t r = pwrite(fd, data, PageSize, offset);
+	const size_t offset = index * PageSize;
+	const size_t r = pwrite(fd, data, PageSize, static_cast<long>(offset));
 	assert(r == PageSize);
 	if (r == -1) {
 		throw std::runtime_error("failed pwrite");
@@ -74,8 +74,8 @@ void File::write(sdb::bp::PageIndex index, const uint8_t *const data) {
 }
 
 void File::read(PageIndex index, uint8_t * data) {
-	const long offset = index * PageSize;
-	const size_t r = pread(fd, data, PageSize, offset);
+	const size_t offset = index * PageSize;
+	const size_t r = pread(fd, data, PageSize, static_cast<long>(offset));
 	assert(r == PageSize);
 	if (r == -1) {
 		throw std::runtime_error("failed pread");

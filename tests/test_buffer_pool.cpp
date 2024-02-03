@@ -22,30 +22,31 @@ protected:
 
 public:
 		void SetUp() override {
-		auto store = sdb::make_store(128, "");
-		auto schema = std::make_shared<sdb::Schema>(sdb::Schema{
-				sdb::Column{
-						.name="id",
-						.type=sdb::Type::uint64_t,
-						.length=8
-				},
-				sdb::Column{
-						.name="status",
-						.type=sdb::Type::boolean,
-						.length=1
-				},
-				sdb::Column{
-						.name="number",
-						.type=sdb::Type::uint64_t,
-						.length=8
-				},
-		});
-		const auto name = "test_db_" + std::to_string(rand());
-		if (store->exists(name)) {
-			store->drop(name);
+			auto store = sdb::make_store(128, "");
+			auto schema = std::make_shared<sdb::Schema>(sdb::Schema{
+					sdb::Column{
+							.name="id",
+							.type=sdb::Type::uint64_t,
+							.length=8
+					},
+					sdb::Column{
+							.name="status",
+							.type=sdb::Type::boolean,
+							.length=1
+					},
+					sdb::Column{
+							.name="number",
+							.type=sdb::Type::uint64_t,
+							.length=8
+					},
+			});
+
+			const auto name = "test_db_" + std::to_string(rand());
+			if (store->exists(name)) {
+				store->drop(name);
+			}
+			table = store->connect_table(name, schema);
 		}
-		table = store->connect_table(name, schema);
-	}
 
 	void TearDown() override {
 		table.reset();

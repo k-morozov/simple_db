@@ -14,13 +14,14 @@ struct Frame final {
 	PageIndex page_index;
 	size_t ref_count;
 
-	void dump() {
+	void dump_data() {
 		if (owner) {
 			owner->write(page_index, data);
 		}
 	}
 
-	void upload() {
+	void upload_data() {
+		assert(owner);
 		owner->read(page_index, data);
 	}
 };

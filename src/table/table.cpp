@@ -6,7 +6,7 @@
 
 namespace sdb::tb {
 
-class Table : public ITable {
+class Table final: public ITable {
 public:
 	explicit Table(bp::BufferPoolPtr pool, bp::FilePtr file, PageProviderPtr provider) :
 		pool_(std::move(pool)),
@@ -15,11 +15,6 @@ public:
 		current_page_index_(0)
 	{}
 	~Table() override = default;
-
-	TablePagePtr get_page(bp::PageIndex index) override {
-		auto pool_page = pool_->get_page(file_, index);
-		return provider_->transform(pool_page);
-	}
 
 	RowID insert_row(const Row &row) override {
 		for(;;current_page_index_++) {
@@ -43,7 +38,6 @@ public:
 		return page->get_row(id.row_index);
 	}
 
-
 private:
 	const bp::BufferPoolPtr pool_;
 	const bp::FilePtr file_;
@@ -51,6 +45,12 @@ private:
 
 	PageIndex current_page_index_;
 
+	TablePagePtr get_page(bp::PageIndex index) override {
+		auto pool_page = pool_->get_page(file_, index);
+		return provider_->transform(pool_page);
+	}
+
+	[[nodiscard]]
 	PageIndex get_page_count() const {
 		return file_->get_page_count();
 	}
