@@ -22,7 +22,7 @@ public:
 				current_page_index_ = file_->alloc_page(); // @TODO
 			}
 
-			auto page = get_page(current_page_index_);
+			auto page = get_table_page(current_page_index_);
 
 			if (auto [ok, row_index] = page->insert_row(row); ok) {
 				return RowID{
@@ -34,7 +34,7 @@ public:
 	}
 
 	Row get_row(const RowID& id) override {
-		auto page = get_page(id.page_index);
+		auto page = get_table_page(id.page_index);
 		return page->get_row(id.row_index);
 	}
 
@@ -45,7 +45,7 @@ private:
 
 	PageIndex current_page_index_;
 
-	TablePagePtr get_page(bp::PageIndex index) override {
+	TablePagePtr get_table_page(const bp::PageIndex index) {
 		auto pool_page = pool_->get_page(file_, index);
 		return provider_->transform(pool_page);
 	}

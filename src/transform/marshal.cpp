@@ -35,8 +35,6 @@ private:
 	uint8_t*& data_;
 };
 
-}
-
 size_t calculate_row_space(const SchemaPtr& schema) {
 	std::size_t result{};
 	for(const auto& column : *schema) {
@@ -51,6 +49,8 @@ size_t calculate_row_space(const SchemaPtr& schema) {
 	}
 	return result;
 }
+
+} // anonymous namespace
 
 sdb::Marshal::Marshal(SchemaPtr schema) :
 	schema_(std::move(schema)),

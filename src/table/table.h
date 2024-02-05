@@ -21,7 +21,6 @@ class ITable {
 public:
 	virtual ~ITable() = default;
 
-	virtual TablePagePtr get_page(bp::PageIndex index) = 0;
 	virtual RowID insert_row(const Row& row) = 0;
 	virtual Row get_row(const RowID& id) = 0;
 };
