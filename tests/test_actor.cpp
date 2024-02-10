@@ -4,22 +4,22 @@
 
 #include <gtest/gtest.h>
 
-#include <tx/actor/runtime.h>
-#include <tx/actor/actor.h>
-#include <tx/actor/msg/message.h>
+#include <tx/runtime.h>
+#include <tx/actor.h>
+#include <tx/msg/message.h>
 
-class FakeActor: public sdb::actor::IActor {
+class FakeActor: public sdb::tx::IActor {
 public:
-	sdb::actor::ActorID get_actor_id() const override {
+	sdb::tx::ActorID get_actor_id() const override {
 		return 1;
 	}
-	void send_on_tick(sdb::actor::Messages&& _) override {
+	void send_on_tick(sdb::tx::Messages&& _) override {
 
 	}
 };
 
 TEST(TestActor, RegisterTwiceFailed) {
-	sdb::actor::Runtime runtime;
+	sdb::tx::Runtime runtime;
 
 	auto actor1 = FakeActor();
 	auto actor2 = FakeActor();

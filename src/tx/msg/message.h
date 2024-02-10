@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <string>
 
-#include <tx/actor/types.h>
+#include <tx/types.h>
 
-namespace sdb::actor {
+namespace sdb::tx {
 
 enum class MessageType: uint8_t {
 	MSG_UNDEFINED,
@@ -28,4 +28,4 @@ struct Message {
 	// @todo payload
 };
 
-} // namespace sdb::actor
+} // namespace sdb::tx

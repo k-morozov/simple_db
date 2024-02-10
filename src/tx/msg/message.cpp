@@ -6,7 +6,7 @@
 
 #include <ostream>
 
-namespace sdb::actor {
+namespace sdb::tx {
 
 std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 	switch (type) {
@@ -20,4 +20,4 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 	return stream;
 }
 
-} // namespace sdb::actor
+} // namespace sdb::tx

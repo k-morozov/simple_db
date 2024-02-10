@@ -6,10 +6,10 @@
 
 #include <optional>
 
-#include <tx/actor/msg/message.h>
-#include <tx/actor/types.h>
+#include <tx/msg/message.h>
+#include <tx/types.h>
 
-namespace sdb::actor {
+namespace sdb::tx {
 
 struct SentMessage final {
 	SentMessage(const Timestamp send_timestamp, const Message msg):
@@ -29,4 +29,4 @@ struct DeliveredLast {
 	bool operator()(const SentMessage& lhs, const SentMessage& rhs) const;
 };
 
-} // namespace sdb::actor
+} // namespace sdb::tx

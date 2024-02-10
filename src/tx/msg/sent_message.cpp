@@ -8,12 +8,12 @@
 
 #include <tuple>
 
-namespace sdb::actor {
+namespace sdb::tx {
 
-bool actor::DeliveredLast::operator()(const SentMessage &lhs, const SentMessage &rhs) const {
+bool tx::DeliveredLast::operator()(const SentMessage &lhs, const SentMessage &rhs) const {
 	return std::make_tuple(lhs.delivery_timestamp.value_or(0), lhs.send_timestamp)
 	>
 	std::make_tuple(rhs.delivery_timestamp.value_or(0), rhs.send_timestamp);
 }
 
-} // namespace sdb::actor
+} // namespace sdb::tx

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace sdb::actor {
+namespace sdb::tx {
 
 using ActorID = uint32_t;
 using MsgID = uint32_t;
@@ -13,4 +13,4 @@ using Messages = std::vector<Message>;
 
 using Timestamp = uint64_t;
 
-} // namespace sdb::actor
+} // namespace sdb::tx

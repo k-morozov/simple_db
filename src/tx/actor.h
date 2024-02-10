@@ -2,7 +2,7 @@
 
 #include "types.h"
 
-namespace sdb::actor {
+namespace sdb::tx {
 
 class IActor {
 public:
@@ -12,4 +12,4 @@ public:
     virtual void send_on_tick(/*time*/Messages&& msgs) = 0;
 };
 
-} // namespace sdb::actor
+} // namespace sdb::tx

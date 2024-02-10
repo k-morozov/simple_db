@@ -15,10 +15,11 @@ add_library(simple_db
         table/fixed_table_page.cpp
         transform/fixed_page_provider.cpp
         transform/marshal.cpp
-        tx/actor/runtime.cpp
+        tx/runtime.cpp
         log/log.cpp
-        tx/actor/msg/message.cpp
-        tx/actor/msg/sent_message.cpp
+        tx/msg/message.cpp
+        tx/msg/sent_message.cpp
+        tx/clock/clock.cpp
 )
 
 target_include_directories(simple_db PUBLIC ${SIMPLE_DB_INCLUDE_DIRS})
