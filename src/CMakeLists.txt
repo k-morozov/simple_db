@@ -16,7 +16,8 @@ add_library(simple_db
         transform/fixed_page_provider.cpp
         transform/marshal.cpp
         tx/runtime.cpp
-        log/log.cpp
+        common/log/log.cpp
+        common/random/generator.cpp
         tx/msg/message.cpp
         tx/msg/sent_message.cpp
         tx/clock/clock.cpp

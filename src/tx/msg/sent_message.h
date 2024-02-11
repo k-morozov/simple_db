@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <optional>
+#include <ostream>
 
 #include <tx/msg/message.h>
 #include <tx/types.h>
@@ -12,21 +12,15 @@
 namespace sdb::tx {
 
 struct SentMessage final {
-	SentMessage(const Timestamp send_timestamp, const Message msg):
-		send_timestamp(send_timestamp),
-		msg(msg)
-	{};
-
-	SentMessage(const SentMessage& sm) = default;
-	SentMessage& operator=(const SentMessage& sm) = default;
-
-	Timestamp send_timestamp;
-	std::optional<Timestamp> delivery_timestamp;
+	Timestamp send_timestamp{};
+	Timestamp delivery_timestamp{};
 	Message msg;
 };
 
 struct DeliveredLast {
 	bool operator()(const SentMessage& lhs, const SentMessage& rhs) const;
 };
+
+std::ostream& operator<<(std::ostream& stream, const SentMessage& sm);
 
 } // namespace sdb::tx

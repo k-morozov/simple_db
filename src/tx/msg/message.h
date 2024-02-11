@@ -28,4 +28,8 @@ struct Message {
 	// @todo payload
 };
 
+std::ostream& operator<<(std::ostream& stream, const Message& msg);
+bool operator==(const Message& lhs, const Message& rhs);
+bool operator<(const Message& lhs, const Message& rhs);
+
 } // namespace sdb::tx
