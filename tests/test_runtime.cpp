@@ -199,3 +199,55 @@ TEST(TestActorRuntime, SendMsgTwoActors) {
 		ASSERT_TRUE(result2 == expected_actor2);
 	}
 }
+
+TEST(TestActorRuntime, SendSomeMsgsToOneActor) {
+	sdb::tx::Runtime runtime;
+
+	GeneratorActorID builder;
+
+	auto actor1 = FakeActor(builder);
+	auto actor2 = FakeActor(builder);
+	auto actor3 = FakeActor(builder);
+
+	ASSERT_NO_THROW(runtime.register_actor(&actor1));
+	ASSERT_NO_THROW(runtime.register_actor(&actor2));
+	ASSERT_NO_THROW(runtime.register_actor(&actor3));
+
+	constexpr int count_msgs_from_actor1 = 10;
+	sdb::tx::Messages expected_msg;
+
+	for(int i=0; i<count_msgs_from_actor1; i++) {
+		sdb::tx::Message msg;
+		msg.type = sdb::tx::MessageType::MSG_START;
+		msg.source = actor1.get_actor_id();
+		msg.destination = actor3.get_actor_id();
+		msg.id = i;
+
+		runtime.send(msg);
+		expected_msg.push_back(msg);
+	}
+
+	constexpr int count_msgs_from_actor2 = 15;
+	for(int i=0; i<count_msgs_from_actor2; i++) {
+		sdb::tx::Message msg;
+		msg.type = sdb::tx::MessageType::MSG_START;
+		msg.source = actor2.get_actor_id();
+		msg.destination = actor3.get_actor_id();
+		msg.id = count_msgs_from_actor1 + i;
+
+		runtime.send(msg);
+		expected_msg.push_back(msg);
+	}
+
+	std::sort(expected_msg.begin(), expected_msg.end());
+	runtime.run(25);
+
+	ASSERT_TRUE(actor1.total.empty());
+	ASSERT_TRUE(actor2.total.empty());
+
+	ASSERT_TRUE(actor3.total.size() == count_msgs_from_actor1 + count_msgs_from_actor2);
+
+	auto result = actor3.total;
+	std::sort(result.begin(), result.end());
+	ASSERT_TRUE(result == expected_msg);
+}
