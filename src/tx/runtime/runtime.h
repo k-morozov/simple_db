@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <vector>
 #include <unordered_map>
@@ -12,6 +13,9 @@
 #include <tx/clock/clock.h>
 
 namespace sdb::tx {
+
+class Runtime;
+using RuntimePtr = std::shared_ptr<Runtime>;
 
 class Runtime final {
 public:

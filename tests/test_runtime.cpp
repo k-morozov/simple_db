@@ -4,10 +4,32 @@
 
 #include <gtest/gtest.h>
 
-#include <tx/runtime.h>
+#include <tx/runtime/runtime.h>
+#include <tx/runtime/proxy_runtime.h>
 #include <tx/actor.h>
 #include <tx/msg/message.h>
 #include <tx/msg/sent_message.h>
+
+sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
+								  const int count_msgs_from_actor,
+								  const sdb::tx::ActorID source,
+								  const sdb::tx::ActorID destination,
+								  const size_t msg_id_offset) {
+	auto proxy = sdb::tx::ProxyRuntime(std::move(runtime), source);
+	sdb::tx::Messages expected_msg;
+
+	for(int i=0; i<count_msgs_from_actor; i++) {
+		sdb::tx::Message msg;
+		msg.type = sdb::tx::MessageType::MSG_START;
+		msg.source = source;
+		msg.destination = destination;
+		msg.id = msg_id_offset + i;
+
+		proxy.send(msg);
+		expected_msg.push_back(msg);
+	}
+	return expected_msg;
+}
 
 class GeneratorActorID final {
 public:
@@ -140,68 +162,65 @@ TEST(TestActorRuntime, SendMsgToOneActor) {
 }
 
 TEST(TestActorRuntime, SendMsgTwoActors) {
-	sdb::tx::Runtime runtime;
+	auto runtime = std::make_shared<sdb::tx::Runtime>();
 
 	GeneratorActorID builder;
 
 	auto actor1 = FakeActor(builder);
 	auto actor2 = FakeActor(builder);
 
-	ASSERT_NO_THROW(runtime.register_actor(&actor1));
-	ASSERT_NO_THROW(runtime.register_actor(&actor2));
+	ASSERT_NO_THROW(runtime->register_actor(&actor1));
+	ASSERT_NO_THROW(runtime->register_actor(&actor2));
 
 	constexpr int count_msgs_actor2 = 10;
-	sdb::tx::Messages expected_actor2;
-	expected_actor2.reserve(count_msgs_actor2);
+	sdb::tx::Messages expected_msg_to_actor2;
+	expected_msg_to_actor2.reserve(count_msgs_actor2);
 
-	for(int i=0; i<count_msgs_actor2; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
-		msg.source = actor1.get_actor_id();
-		msg.destination = actor2.get_actor_id();
-		msg.id = i;
-
-		runtime.send(msg);
-		expected_actor2.push_back(msg);
+	{
+		auto expected_msg = send_to_runtime(runtime,
+											count_msgs_actor2,
+											actor1.get_actor_id(),
+											actor2.get_actor_id(),
+											0);
+		std::move(expected_msg.begin(), expected_msg.end(),
+				  std::back_inserter(expected_msg_to_actor2));
 	}
 
 	constexpr int count_msgs_actor1 = 15;
-	sdb::tx::Messages expected_actor1;
-	expected_actor1.reserve(count_msgs_actor1);
-
-	for(int i=0; i<count_msgs_actor1; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
-		msg.source = actor2.get_actor_id();
-		msg.destination = actor1.get_actor_id();
-		msg.id = count_msgs_actor2 + i;
-
-		runtime.send(msg);
-		expected_actor1.push_back(msg);
+	sdb::tx::Messages expected_msg_to_actor1;
+	expected_msg_to_actor1.reserve(count_msgs_actor1);
+	{
+		auto expected_msg = send_to_runtime(runtime,
+											count_msgs_actor1,
+											actor2.get_actor_id(),
+											actor1.get_actor_id(),
+											count_msgs_actor2);
+		std::move(expected_msg.begin(), expected_msg.end(),
+				  std::back_inserter(expected_msg_to_actor1));
 	}
 
-	std::sort(expected_actor2.begin(), expected_actor2.end());
-	std::sort(expected_actor1.begin(), expected_actor1.end());
+	std::sort(expected_msg_to_actor2.begin(), expected_msg_to_actor2.end());
+	std::sort(expected_msg_to_actor1.begin(), expected_msg_to_actor1.end());
 
-	runtime.run(25);
+	runtime->run(25);
 
 	{
 		auto result1 = actor1.total;
 		std::sort(result1.begin(), result1.end());
 		ASSERT_TRUE(actor1.total.size() == count_msgs_actor1);
-		ASSERT_TRUE(result1 == expected_actor1);
+		ASSERT_TRUE(result1 == expected_msg_to_actor1);
 	}
 
 	{
 		auto result2 = actor2.total;
 		std::sort(result2.begin(), result2.end());
 		ASSERT_TRUE(result2.size() == count_msgs_actor2);
-		ASSERT_TRUE(result2 == expected_actor2);
+		ASSERT_TRUE(result2 == expected_msg_to_actor2);
 	}
 }
 
 TEST(TestActorRuntime, SendSomeMsgsToOneActor) {
-	sdb::tx::Runtime runtime;
+	auto runtime = std::make_shared<sdb::tx::Runtime>();
 
 	GeneratorActorID builder;
 
@@ -209,38 +228,36 @@ TEST(TestActorRuntime, SendSomeMsgsToOneActor) {
 	auto actor2 = FakeActor(builder);
 	auto actor3 = FakeActor(builder);
 
-	ASSERT_NO_THROW(runtime.register_actor(&actor1));
-	ASSERT_NO_THROW(runtime.register_actor(&actor2));
-	ASSERT_NO_THROW(runtime.register_actor(&actor3));
+	ASSERT_NO_THROW(runtime->register_actor(&actor1));
+	ASSERT_NO_THROW(runtime->register_actor(&actor2));
+	ASSERT_NO_THROW(runtime->register_actor(&actor3));
 
-	constexpr int count_msgs_from_actor1 = 10;
 	sdb::tx::Messages expected_msg;
 
-	for(int i=0; i<count_msgs_from_actor1; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
-		msg.source = actor1.get_actor_id();
-		msg.destination = actor3.get_actor_id();
-		msg.id = i;
-
-		runtime.send(msg);
-		expected_msg.push_back(msg);
+	constexpr int count_msgs_from_actor1 = 10;
+	{
+		auto expected_msg_to_actor3 = send_to_runtime(runtime,
+											 count_msgs_from_actor1,
+											 actor1.get_actor_id(),
+											 actor3.get_actor_id(),
+											 0);
+		std::move(expected_msg_to_actor3.begin(), expected_msg_to_actor3.end(),
+				  std::back_inserter(expected_msg));
 	}
 
 	constexpr int count_msgs_from_actor2 = 15;
-	for(int i=0; i<count_msgs_from_actor2; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
-		msg.source = actor2.get_actor_id();
-		msg.destination = actor3.get_actor_id();
-		msg.id = count_msgs_from_actor1 + i;
-
-		runtime.send(msg);
-		expected_msg.push_back(msg);
+	{
+		auto expected_msg_to_actor3 = send_to_runtime(runtime,
+													  count_msgs_from_actor2,
+													  actor2.get_actor_id(),
+													  actor3.get_actor_id(),
+													  count_msgs_from_actor1);
+		std::move(expected_msg_to_actor3.begin(), expected_msg_to_actor3.end(),
+				  std::back_inserter(expected_msg));
 	}
 
 	std::sort(expected_msg.begin(), expected_msg.end());
-	runtime.run(25);
+	runtime->run(25);
 
 	ASSERT_TRUE(actor1.total.empty());
 	ASSERT_TRUE(actor2.total.empty());
