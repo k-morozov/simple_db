@@ -8,6 +8,8 @@
 #include <string>
 
 #include <tx/types.h>
+#include <tx/msg/msg_types.h>
+#include <tx/msg/msg_payload.h>
 
 namespace sdb::tx {
 
@@ -25,7 +27,7 @@ struct Message {
 
 	MsgID id;
 
-	// @todo payload
+	MsgPayload payload;
 };
 
 std::ostream& operator<<(std::ostream& stream, const Message& msg);
