@@ -23,6 +23,8 @@ add_library(simple_db
         tx/msg/sent_message.cpp
         tx/clock/clock.cpp
         tx/server/server.cpp
+        tx/server/server_tx.cpp
+        tx/storage/storage.cpp
 )
 
 target_include_directories(simple_db PUBLIC ${SIMPLE_DB_INCLUDE_DIRS})

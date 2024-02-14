@@ -19,4 +19,6 @@ using Key = int64_t;
 // Unique ID of transaction.
 using TxID = int64_t;
 
+constexpr TxID UNDEFINED_TX_ID = -1;
+
 } // namespace sdb::tx

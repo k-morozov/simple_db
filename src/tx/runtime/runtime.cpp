@@ -82,7 +82,7 @@ void Runtime::send_to_actors() {
 		auto msgs = std::move(destination_actor_messages_[destination]);
 		if (!msgs.empty()) {
 			LOG_DEBUG << "Send " << msgs.size() << " msgs to actor " << destination;
-			actor->send_on_tick(std::move(msgs));
+			actor->send_on_tick(clock_, std::move(msgs));
 		}
 	}
 }

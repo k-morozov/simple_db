@@ -57,7 +57,7 @@ public:
 	sdb::tx::ActorID get_actor_id() const override {
 		return actor_id;
 	}
-	void send_on_tick(sdb::tx::Messages&& msgs) override {
+	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
 		std::move(std::begin(msgs), std::end(msgs), std::back_inserter(total));
 	}
 
