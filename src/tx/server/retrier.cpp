@@ -23,7 +23,7 @@ Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
 void Retrier::get_ready(const Timestamp ts,
 						Messages* messages) {
 	assert(messages);
-	messages->resize(messages->size() + outgoing_.size());
+	messages->reserve(messages->size() + outgoing_.size());
 
 	for(auto& msg : outgoing_) {
 		messages->push_back(msg);

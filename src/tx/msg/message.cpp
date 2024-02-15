@@ -29,18 +29,18 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 
 std::ostream& operator<<(std::ostream& stream, const Message& msg) {
 	stream << "message "
-		   << "[type=" << msg.type << "]"
-		   << "[id=" << msg.msg_id << "]"
-		   	<< "[from " << msg.source << "]"
-		   	<< "[to " << msg.destination << "]"
-			   << " todo payload";
+		   	<< "[type=" << msg.type << "]"
+		   	<< "[id=" << msg.msg_id << "]"
+		   	<< "[source " << msg.source << "]"
+		   	<< "[destination " << msg.destination << "]"
+			<< " with payload: " << msg.payload;
 	return stream;
 }
 
 bool operator==(const Message& lhs, const Message& rhs) {
-	return std::make_tuple(lhs.msg_id, lhs.type, lhs.source, lhs.destination)
+	return std::make_tuple(lhs.msg_id, lhs.type, lhs.source, lhs.destination, lhs.payload)
 		==
-		std::make_tuple(rhs.msg_id, rhs.type, rhs.source, rhs.destination);
+		std::make_tuple(rhs.msg_id, rhs.type, rhs.source, rhs.destination, rhs.payload);
 }
 
 bool operator<(const Message& lhs, const Message& rhs) {

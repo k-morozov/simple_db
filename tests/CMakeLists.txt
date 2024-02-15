@@ -6,7 +6,8 @@ add_executable(${TEST_APP_NAME}
         main.cpp
         test_buffer_pool.cpp
         test_marshal.cpp
-        test_runtime.cpp
+        test_tx_runtime.cpp
+        test_tx_msg.cpp
         test_tx_server_start_msg.cpp
 )
 

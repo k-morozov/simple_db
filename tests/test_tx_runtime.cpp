@@ -8,7 +8,6 @@
 #include <tx/runtime/proxy_runtime.h>
 #include <tx/actor.h>
 #include <tx/msg/message.h>
-#include <tx/msg/sent_message.h>
 
 #include "common/fake_actor.h"
 
@@ -31,49 +30,6 @@ sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
 		expected_msg.push_back(msg);
 	}
 	return expected_msg;
-}
-
-TEST(TestActorRuntime, CmpMsg) {
-	sdb::tx::msg::Message msg1;
-	msg1.type = sdb::tx::msg::MessageType::MSG_START;
-	msg1.source = 1;
-	msg1.destination = 1;
-	msg1.msg_id = 1;
-
-	ASSERT_EQ(msg1, msg1);
-
-	sdb::tx::msg::Message msg2;
-	msg2.type = sdb::tx::msg::MessageType::MSG_START;
-	msg2.source = 1;
-	msg2.destination = 1;
-	msg2.msg_id = 1;
-
-	ASSERT_EQ(msg1, msg2);
-	ASSERT_EQ(msg2, msg1);
-
-	{
-		auto msg_another = msg2;
-		msg_another.destination++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.source++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.msg_id++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.type = sdb::tx::msg::MessageType::MSG_UNDEFINED;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
 }
 
 TEST(TestActorRuntime, RegisterTwiceFailed) {

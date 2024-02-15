@@ -17,13 +17,14 @@ ProxyRuntime::ProxyRuntime(RuntimePtr runtime, const ActorID source_actor_id):
 }
 
 void ProxyRuntime::send(msg::Message msg) {
-	LOG_DEBUG << "ProxyRuntime::send set source=" << source_actor_id
-		<< " for msg id=" << msg.msg_id;
+	LOG_DEBUG << "[ProxyRuntime::send] set source=" << source_actor_id
+		<< " for " << msg;
 	msg.source = source_actor_id;
 
-	LOG_DEBUG << "ProxyRuntime::send msg"
+	LOG_DEBUG << "[ProxyRuntime::send] msg"
 			  << " with id=" << msg.msg_id
 			  << " to runtime";
+
 	assert(runtime);
 	runtime->send(std::move(msg));
 }

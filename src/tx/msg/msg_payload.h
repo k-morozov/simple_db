@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <ostream>
 #include <variant>
 
 #include <tx/msg/msg_types.h>
@@ -23,5 +24,8 @@ struct MsgPayload final {
 		return std::get<T>(payload);
 	}
 };
+
+bool operator==(const MsgPayload& lhs, const MsgPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgPayload& payload);
 
 } // namespace sdb::tx::msg
