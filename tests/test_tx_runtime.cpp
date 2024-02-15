@@ -8,7 +8,8 @@
 #include <tx/runtime/proxy_runtime.h>
 #include <tx/actor.h>
 #include <tx/msg/message.h>
-#include <tx/msg/sent_message.h>
+
+#include "common/fake_actor.h"
 
 sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
 								  const int count_msgs_from_actor,
@@ -19,11 +20,11 @@ sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
 	sdb::tx::Messages expected_msg;
 
 	for(int i=0; i<count_msgs_from_actor; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
+		sdb::tx::msg::Message msg;
+		msg.type = sdb::tx::msg::MessageType::MSG_START;
 		msg.source = source;
 		msg.destination = destination;
-		msg.id = msg_id_offset + i;
+		msg.msg_id = msg_id_offset + i;
 
 		proxy.send(msg);
 		expected_msg.push_back(msg);
@@ -31,92 +32,13 @@ sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
 	return expected_msg;
 }
 
-class GeneratorActorID final {
-public:
-	enum class Type {
-		EQUAL_ACTOR_ID,
-		DIFFERENT_ACTOR_ID
-	};
-	explicit GeneratorActorID(Type type = Type::DIFFERENT_ACTOR_ID) : type(type) {};
-	sdb::tx::ActorID operator()() {
-		const auto result = actor_id;
-		if (type == Type::DIFFERENT_ACTOR_ID) {
-			actor_id++;
-		}
-		return result;
-	}
-private:
-	const Type type;
-	sdb::tx::ActorID actor_id{1};
-};
-
-class FakeActor: public sdb::tx::IActor {
-public:
-	explicit FakeActor(GeneratorActorID& build) : actor_id(build()) {};
-
-	sdb::tx::ActorID get_actor_id() const override {
-		return actor_id;
-	}
-	void send_on_tick(sdb::tx::Messages&& msgs) override {
-		std::move(std::begin(msgs), std::end(msgs), std::back_inserter(total));
-	}
-
-	sdb::tx::Messages total;
-
-private:
-	const sdb::tx::ActorID actor_id;
-};
-
-TEST(TestActorRuntime, CmpMsg) {
-	sdb::tx::Message msg1;
-	msg1.type = sdb::tx::MessageType::MSG_START;
-	msg1.source = 1;
-	msg1.destination = 1;
-	msg1.id = 1;
-
-	ASSERT_EQ(msg1, msg1);
-
-	sdb::tx::Message msg2;
-	msg2.type = sdb::tx::MessageType::MSG_START;
-	msg2.source = 1;
-	msg2.destination = 1;
-	msg2.id = 1;
-
-	ASSERT_EQ(msg1, msg2);
-	ASSERT_EQ(msg2, msg1);
-
-	{
-		auto msg_another = msg2;
-		msg_another.destination++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.source++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.id++;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-
-	{
-		auto msg_another = msg2;
-		msg_another.type = sdb::tx::MessageType::MSG_UNDEFINED;
-		ASSERT_FALSE(msg2 == msg_another);
-	}
-}
-
 TEST(TestActorRuntime, RegisterTwiceFailed) {
 	sdb::tx::Runtime runtime;
 
-	GeneratorActorID builder(GeneratorActorID::Type::EQUAL_ACTOR_ID);
+	common::GeneratorActorID builder(common::GeneratorActorID::Type::EQUAL_ACTOR_ID);
 
-	auto actor1 = FakeActor(builder);
-	auto actor2 = FakeActor(builder);
+	auto actor1 = common::FakeActor(builder);
+	auto actor2 = common::FakeActor(builder);
 
 	ASSERT_NO_THROW(runtime.register_actor(&actor1));
 	ASSERT_ANY_THROW(runtime.register_actor(&actor2););
@@ -125,10 +47,10 @@ TEST(TestActorRuntime, RegisterTwiceFailed) {
 TEST(TestActorRuntime, SendMsgToOneActor) {
 	sdb::tx::Runtime runtime;
 
-	GeneratorActorID builder;
+	common::GeneratorActorID builder;
 
-	auto actor1 = FakeActor(builder);
-	auto actor2 = FakeActor(builder);
+	auto actor1 = common::FakeActor(builder);
+	auto actor2 = common::FakeActor(builder);
 
 	ASSERT_NO_THROW(runtime.register_actor(&actor1));
 	ASSERT_NO_THROW(runtime.register_actor(&actor2));
@@ -138,11 +60,11 @@ TEST(TestActorRuntime, SendMsgToOneActor) {
 	expected_actor2.reserve(count_msgs_actor2);
 
 	for(int i=0; i<count_msgs_actor2; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
+		sdb::tx::msg::Message msg;
+		msg.type = sdb::tx::msg::MessageType::MSG_START;
 		msg.source = actor1.get_actor_id();
 		msg.destination = actor2.get_actor_id();
-		msg.id = i;
+		msg.msg_id = i;
 
 		runtime.send(msg);
 		expected_actor2.push_back(msg);
@@ -164,10 +86,10 @@ TEST(TestActorRuntime, SendMsgToOneActor) {
 TEST(TestActorRuntime, SendMsgTwoActors) {
 	auto runtime = std::make_shared<sdb::tx::Runtime>();
 
-	GeneratorActorID builder;
+	common::GeneratorActorID builder;
 
-	auto actor1 = FakeActor(builder);
-	auto actor2 = FakeActor(builder);
+	auto actor1 = common::FakeActor(builder);
+	auto actor2 = common::FakeActor(builder);
 
 	ASSERT_NO_THROW(runtime->register_actor(&actor1));
 	ASSERT_NO_THROW(runtime->register_actor(&actor2));
@@ -222,11 +144,11 @@ TEST(TestActorRuntime, SendMsgTwoActors) {
 TEST(TestActorRuntime, SendSomeMsgsToOneActor) {
 	auto runtime = std::make_shared<sdb::tx::Runtime>();
 
-	GeneratorActorID builder;
+	common::GeneratorActorID builder;
 
-	auto actor1 = FakeActor(builder);
-	auto actor2 = FakeActor(builder);
-	auto actor3 = FakeActor(builder);
+	auto actor1 = common::FakeActor(builder);
+	auto actor2 = common::FakeActor(builder);
+	auto actor3 = common::FakeActor(builder);
 
 	ASSERT_NO_THROW(runtime->register_actor(&actor1));
 	ASSERT_NO_THROW(runtime->register_actor(&actor2));

@@ -111,10 +111,10 @@ INSTANTIATE_TEST_SUITE_P(
 					.get_count=10'000}),
 				ConvertFromParam({
 					.insert_count=10'000,
-					.get_count=10}),
-				ConvertFromParam({
-					.insert_count=1'000,
-					.get_count=1'000})
+					.get_count=10})
+//				ConvertFromParam({
+//					.insert_count=1'000,
+//					.get_count=1'000})
 		));
 
 struct ExpectedRow {

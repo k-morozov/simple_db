@@ -13,7 +13,7 @@ class ProxyRuntime final {
 public:
 	ProxyRuntime(RuntimePtr runtime, ActorID source_actor_id);
 
-	void send(Message msg);
+	void send(msg::Message msg);
 
 private:
 	const RuntimePtr runtime;

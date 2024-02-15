@@ -23,7 +23,7 @@ public:
     ~Runtime() = default;
 
     void register_actor(IActor* actor);
-    void send(Message msg);
+    void send(msg::Message msg);
 
 	void run(int ticks = 10000);
     
@@ -35,7 +35,7 @@ private:
 
 	std::vector<IActor*> actors_;
 	std::unordered_map<ActorID, Messages> destination_actor_messages_;
-	std::priority_queue<SentMessage, std::vector<SentMessage>, DeliveredLast> messages_queue_;
+	std::priority_queue<msg::SentMessage, std::vector<msg::SentMessage>, msg::DeliveredLast> messages_queue_;
 
 	void clear_destination_actor_messages_();
 	void fill_destination_actor_messages();

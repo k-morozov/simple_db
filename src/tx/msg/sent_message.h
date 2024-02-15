@@ -9,7 +9,7 @@
 #include <tx/msg/message.h>
 #include <tx/types.h>
 
-namespace sdb::tx {
+namespace sdb::tx::msg {
 
 struct SentMessage final {
 	Timestamp send_timestamp{};
@@ -23,4 +23,4 @@ struct DeliveredLast {
 
 std::ostream& operator<<(std::ostream& stream, const SentMessage& sm);
 
-} // namespace sdb::tx
+} // namespace sdb::tx::msg

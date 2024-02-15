@@ -7,7 +7,10 @@
 #include <ostream>
 #include <tuple>
 
-namespace sdb::tx {
+#include <common/log/log.h>
+#include <tx/msg/generator_msg_id.h>
+
+namespace sdb::tx::msg {
 
 std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 	switch (type) {
@@ -17,30 +20,56 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 		case MessageType::MSG_START:
 			stream << "MSG_START";
 			break;
+		case MessageType::MSG_START_ACK:
+			stream << "MSG_START_ACK";
+			break;
 	}
 	return stream;
 }
 
 std::ostream& operator<<(std::ostream& stream, const Message& msg) {
 	stream << "message "
-			<< "[type=" << msg.type << "]"
-		   	<< "[id=" << msg.id << "]"
-		   	<< "[from " << msg.source << "]"
-		   	<< "[to " << msg.destination << "]";
+		   	<< "[type=" << msg.type << "]"
+		   	<< "[id=" << msg.msg_id << "]"
+		   	<< "[source " << msg.source << "]"
+		   	<< "[destination " << msg.destination << "]"
+			<< " with payload: " << msg.payload;
 	return stream;
 }
 
 bool operator==(const Message& lhs, const Message& rhs) {
-	return std::make_tuple(lhs.id, lhs.type, lhs.source, lhs.destination)
+	return std::make_tuple(lhs.msg_id, lhs.type, lhs.source, lhs.destination, lhs.payload)
 		==
-		std::make_tuple(rhs.id, rhs.type, rhs.source, rhs.destination);
+		std::make_tuple(rhs.msg_id, rhs.type, rhs.source, rhs.destination, rhs.payload);
 }
 
 bool operator<(const Message& lhs, const Message& rhs) {
-	return std::make_tuple(lhs.type, lhs.id, lhs.source, lhs.destination)
+	return std::make_tuple(lhs.type, lhs.msg_id, lhs.source, lhs.destination)
 		   <
-		   std::make_tuple(rhs.type, rhs.id, rhs.source, rhs.destination);
+		   std::make_tuple(rhs.type, rhs.msg_id, rhs.source, rhs.destination);
 }
 
+Message CreateMsgStartAck(const ActorID source,
+						  const ActorID destination,
+						  const TxID txid,
+						  const Timestamp read_ts) {
+	Message msg;
+	msg.source = source;
+	msg.destination = destination;
+	msg.type = MessageType::MSG_START_ACK;
 
-} // namespace sdb::tx
+	msg.msg_id = GeneratorMsgID::get_next_id();
+
+	MsgAckStartPayload payload{
+		.txid=txid,
+		.read_ts=read_ts
+	};
+
+	msg.payload.payload = payload;
+
+	LOG_DEBUG << "CreateMsgStartAck: " << msg;
+
+	return msg;
+}
+
+} // namespace sdb::tx::msg

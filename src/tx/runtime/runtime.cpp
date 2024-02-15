@@ -24,8 +24,8 @@ void Runtime::register_actor(IActor *actor) {
 	LOG_INFO << "Actor with id=" << id << " successfully registered.";
 }
 
-void Runtime::send(Message msg) {
-	auto sent_msg = SentMessage{
+void Runtime::send(msg::Message msg) {
+	auto sent_msg = msg::SentMessage{
 			.send_timestamp=timestamp_,
 			.delivery_timestamp=gen_.generate(1, 20),
 			.msg=msg
@@ -82,7 +82,7 @@ void Runtime::send_to_actors() {
 		auto msgs = std::move(destination_actor_messages_[destination]);
 		if (!msgs.empty()) {
 			LOG_DEBUG << "Send " << msgs.size() << " msgs to actor " << destination;
-			actor->send_on_tick(std::move(msgs));
+			actor->send_on_tick(clock_, std::move(msgs));
 		}
 	}
 }
