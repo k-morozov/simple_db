@@ -11,6 +11,7 @@
 namespace sdb::tx {
 
 class Storage;
+class Retrier;
 
 enum class ServerTXState {
 	NOT_STARTED,
@@ -21,15 +22,16 @@ std::string to_string(ServerTXState state);
 
 class ServerTX final {
 public:
-	ServerTX(ActorID clientID, Storage* storage);
+	ServerTX(ActorID clientID, Storage* storage, Retrier* retrier);
 
 	void tick(Timestamp ts, Messages msg, Messages* outgoing_msgs);
 
 private:
 	const ActorID clientID_;
 	Storage* storage_;
+	Retrier* retrier_;
 
-	ServerTXState state_;
+	ServerTXState state_{ServerTXState::NOT_STARTED};
 
 	TxID txid_{UNDEFINED_TX_ID};
 	Timestamp read_ts_;

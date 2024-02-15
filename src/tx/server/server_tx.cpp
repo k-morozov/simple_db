@@ -9,6 +9,7 @@
 #include <common/log/log.h>
 #include <tx/msg/message.h>
 #include <tx/clock/clock.h>
+#include <tx/server/retrier.h>
 
 namespace sdb::tx {
 
@@ -25,10 +26,14 @@ std::string to_string(const ServerTXState state) {
 	}
 }
 
-ServerTX::ServerTX(ActorID clientID, Storage *storage):
+ServerTX::ServerTX(ActorID clientID, Storage *storage, Retrier* retrier):
 	clientID_(clientID),
-	storage_(storage)
+	storage_(storage),
+	retrier_(retrier)
 {
+	assert(storage_);
+	assert(retrier_);
+
 	LOG_DEBUG << "ServerTX with clientID=" << clientID << " created";
 }
 
@@ -47,6 +52,8 @@ void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* outgoing_msgs) 
 				break;
 		}
 	}
+
+	retrier_->get_ready(ts, outgoing_msgs);
 }
 
 void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message msg) {
@@ -64,7 +71,8 @@ void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message ms
 			const auto ack_msg = msg::CreateMsgStartAck(source_for_ack, destination_for_ack, txid_, read_ts_);
 			LOG_DEBUG << "[ServerTX::process_msg_not_started] send ack: " << ack_msg;
 
-			// @todo send ack
+			[[maybe_unused]]
+			auto handle = retrier_->schedule(read_ts_, ack_msg);
 
 			LOG_INFO << "[ServerTX::process_msg_not_started] change state from " << to_string(state_)
 				<< " to " << to_string(ServerTXState::OPEN);

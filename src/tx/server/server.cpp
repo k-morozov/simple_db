@@ -26,10 +26,11 @@ TxID get_txid_from_msg_payload(const msg::Message& msg) {
 
 Server::Server(ActorID actor_id,
 			   const std::vector<KeyInterval>& key_intervals,
-			   ProxyRuntime runtime) :
+			   ProxyRuntime proxy) :
 		actor_id_(actor_id),
 		key_intervals_(key_intervals),
-		runtime_(std::move(runtime))
+		proxy_runtime_(std::move(proxy)),
+		retrier_()
 {}
 
 ActorID Server::get_actor_id() const {
@@ -54,13 +55,13 @@ void Server::send_on_tick(Clock& clock, Messages &&income_msgs) {
 	}
 
 	for(auto& msg : outgoing_messages) {
-		runtime_.send(std::move(msg));
+		proxy_runtime_.send(msg);
 	}
 }
 
 ServerTX* Server::get_or_create_tx(const TxID txid) {
 	if (!transactions_.contains(txid)) {
-		transactions_.emplace(txid, ServerTX(get_actor_id(), &storage_));
+		transactions_.emplace(txid, ServerTX(get_actor_id(), &storage_, &retrier_));
 	}
 
 	return &transactions_.at(txid);

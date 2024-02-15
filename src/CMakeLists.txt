@@ -21,6 +21,7 @@ add_library(simple_db
         common/random/generator.cpp
         tx/msg/message.cpp
         tx/msg/sent_message.cpp
+        tx/server/retrier.cpp
         tx/msg/generator_msg_id.cpp
         tx/clock/clock.cpp
         tx/server/server.cpp

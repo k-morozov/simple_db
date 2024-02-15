@@ -8,6 +8,7 @@
 
 #include <tx/actor.h>
 #include <tx/runtime/proxy_runtime.h>
+#include <tx/server/retrier.h>
 #include <tx/server/server_tx.h>
 #include <tx/storage/storage.h>
 
@@ -28,14 +29,15 @@ public:
 
 	ActorID get_actor_id() const override;
 
-	void send_on_tick(Clock& clock, Messages &&msgs) override;
+	void send_on_tick(Clock& clock, Messages&& msgs) override;
 private:
 	const ActorID actor_id_;
 	const std::vector<KeyInterval> key_intervals_;
-	ProxyRuntime runtime_;
+	ProxyRuntime proxy_runtime_;
 
 	// @TODO storage
 	Storage storage_;
+	Retrier retrier_;
 
 	Transactions transactions_;
 
