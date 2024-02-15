@@ -10,13 +10,16 @@ namespace sdb::tx {
 
 namespace {
 
-TxID get_txid_from_msg_payload(const Message& msg) {
+TxID get_txid_from_msg_payload(const msg::Message& msg) {
 	switch (msg.type) {
-		case MessageType::MSG_UNDEFINED:
+		case msg::MessageType::MSG_UNDEFINED:
 			return UNDEFINED_TX_ID;
-		case MessageType::MSG_START:
-			return msg.payload.get<StartPayload>().txid;
+		case msg::MessageType::MSG_START:
+			return msg.payload.get<msg::MsgStartPayload>().txid;
+		case msg::MessageType::MSG_START_ACK:
+			return msg.payload.get<msg::MsgAckStartPayload>().txid;
 	}
+	throw std::runtime_error("switch doesn't handle all cases.");
 }
 
 }

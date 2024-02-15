@@ -19,11 +19,11 @@ sdb::tx::Messages send_to_runtime(sdb::tx::RuntimePtr runtime,
 	sdb::tx::Messages expected_msg;
 
 	for(int i=0; i<count_msgs_from_actor; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
+		sdb::tx::msg::Message msg;
+		msg.type = sdb::tx::msg::MessageType::MSG_START;
 		msg.source = source;
 		msg.destination = destination;
-		msg.id = msg_id_offset + i;
+		msg.msg_id = msg_id_offset + i;
 
 		proxy.send(msg);
 		expected_msg.push_back(msg);
@@ -68,19 +68,19 @@ private:
 };
 
 TEST(TestActorRuntime, CmpMsg) {
-	sdb::tx::Message msg1;
-	msg1.type = sdb::tx::MessageType::MSG_START;
+	sdb::tx::msg::Message msg1;
+	msg1.type = sdb::tx::msg::MessageType::MSG_START;
 	msg1.source = 1;
 	msg1.destination = 1;
-	msg1.id = 1;
+	msg1.msg_id = 1;
 
 	ASSERT_EQ(msg1, msg1);
 
-	sdb::tx::Message msg2;
-	msg2.type = sdb::tx::MessageType::MSG_START;
+	sdb::tx::msg::Message msg2;
+	msg2.type = sdb::tx::msg::MessageType::MSG_START;
 	msg2.source = 1;
 	msg2.destination = 1;
-	msg2.id = 1;
+	msg2.msg_id = 1;
 
 	ASSERT_EQ(msg1, msg2);
 	ASSERT_EQ(msg2, msg1);
@@ -99,13 +99,13 @@ TEST(TestActorRuntime, CmpMsg) {
 
 	{
 		auto msg_another = msg2;
-		msg_another.id++;
+		msg_another.msg_id++;
 		ASSERT_FALSE(msg2 == msg_another);
 	}
 
 	{
 		auto msg_another = msg2;
-		msg_another.type = sdb::tx::MessageType::MSG_UNDEFINED;
+		msg_another.type = sdb::tx::msg::MessageType::MSG_UNDEFINED;
 		ASSERT_FALSE(msg2 == msg_another);
 	}
 }
@@ -138,11 +138,11 @@ TEST(TestActorRuntime, SendMsgToOneActor) {
 	expected_actor2.reserve(count_msgs_actor2);
 
 	for(int i=0; i<count_msgs_actor2; i++) {
-		sdb::tx::Message msg;
-		msg.type = sdb::tx::MessageType::MSG_START;
+		sdb::tx::msg::Message msg;
+		msg.type = sdb::tx::msg::MessageType::MSG_START;
 		msg.source = actor1.get_actor_id();
 		msg.destination = actor2.get_actor_id();
-		msg.id = i;
+		msg.msg_id = i;
 
 		runtime.send(msg);
 		expected_actor2.push_back(msg);

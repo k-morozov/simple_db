@@ -8,8 +8,10 @@ namespace sdb::tx {
 using ActorID = uint32_t;
 using MsgID = uint32_t;
 
-struct Message;
-using Messages = std::vector<Message>;
+namespace msg {
+	struct Message;
+}
+using Messages = std::vector<msg::Message>;
 
 // All events have unique timestamp in the system.
 using Timestamp = uint64_t;

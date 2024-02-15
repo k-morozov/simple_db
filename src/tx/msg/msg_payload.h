@@ -8,10 +8,10 @@
 
 #include <tx/msg/msg_types.h>
 
-namespace sdb::tx {
+namespace sdb::tx::msg {
 
 struct MsgPayload final {
-	std::variant<StartPayload, AckStartPayload> payload;
+	std::variant<MsgStartPayload, MsgAckStartPayload> payload;
 
 	template<class T>
 	auto& get() {
@@ -24,4 +24,4 @@ struct MsgPayload final {
 	}
 };
 
-} // namespace sdb::tx
+} // namespace sdb::tx::msg

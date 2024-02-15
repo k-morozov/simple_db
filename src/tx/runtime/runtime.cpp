@@ -24,8 +24,8 @@ void Runtime::register_actor(IActor *actor) {
 	LOG_INFO << "Actor with id=" << id << " successfully registered.";
 }
 
-void Runtime::send(Message msg) {
-	auto sent_msg = SentMessage{
+void Runtime::send(msg::Message msg) {
+	auto sent_msg = msg::SentMessage{
 			.send_timestamp=timestamp_,
 			.delivery_timestamp=gen_.generate(1, 20),
 			.msg=msg

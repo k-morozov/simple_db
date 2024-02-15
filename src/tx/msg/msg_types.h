@@ -6,14 +6,16 @@
 
 #include <tx/types.h>
 
-namespace sdb::tx {
+namespace sdb::tx::msg {
 
-struct StartPayload {
+struct MsgStartPayload {
 	TxID txid;
+	Timestamp ts;
 };
 
-struct AckStartPayload {
+struct MsgAckStartPayload {
 	TxID txid;
+	Timestamp read_ts;
 };
 
-} // namespace sdb::tx
+} // namespace sdb::tx::msg
