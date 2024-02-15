@@ -8,7 +8,7 @@
 
 #include <tx/actor.h>
 #include <tx/runtime/proxy_runtime.h>
-#include <tx/server/retrier.h>
+#include <tx/retrier/retrier.h>
 #include <tx/server/server_tx.h>
 #include <tx/storage/storage.h>
 

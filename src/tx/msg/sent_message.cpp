@@ -15,7 +15,7 @@ bool DeliveredLast::operator()(const SentMessage &lhs, const SentMessage &rhs) c
 }
 
 std::ostream& operator<<(std::ostream& stream, const SentMessage& sm) {
-	stream << "message [type=Sent]"
+	stream << "message [type=SentMessage]"
 			<< "[send_ts=" << sm.send_timestamp << "]"
 			<< "[delivery_ts " << sm.delivery_timestamp << "]"
 			<< " includes " << sm.msg;

@@ -49,6 +49,18 @@ bool operator<(const Message& lhs, const Message& rhs) {
 		   std::make_tuple(rhs.type, rhs.msg_id, rhs.source, rhs.destination);
 }
 
+TxID get_txid_from_msg_payload(const msg::Message& msg) {
+	switch (msg.type) {
+		case msg::MessageType::MSG_UNDEFINED:
+			return UNDEFINED_TX_ID;
+		case msg::MessageType::MSG_START:
+			return msg.payload.get<msg::MsgStartPayload>().txid;
+		case msg::MessageType::MSG_START_ACK:
+			return msg.payload.get<msg::MsgAckStartPayload>().txid;
+	}
+	throw std::runtime_error("switch doesn't handle all cases.");
+}
+
 Message CreateMsgStartAck(const ActorID source,
 						  const ActorID destination,
 						  const TxID txid,

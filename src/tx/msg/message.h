@@ -36,6 +36,8 @@ std::ostream& operator<<(std::ostream& stream, const Message& msg);
 bool operator==(const Message& lhs, const Message& rhs);
 bool operator<(const Message& lhs, const Message& rhs);
 
+TxID get_txid_from_msg_payload(const msg::Message& msg);
+
 // @todo create from msg
 Message CreateMsgStartAck(ActorID source, ActorID destination, TxID txid, Timestamp read_ts);
 
