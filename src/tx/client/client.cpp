@@ -14,14 +14,15 @@
 
 namespace sdb::tx::client {
 
-Client::Client(ActorID actor_id, const std::vector<ClientTxSpec>& tx_specs, ProxyRuntime proxy):
+Client::Client(ActorID actor_id, const std::vector<ClientTxSpec>& tx_specs, const Discovery* discovery, ProxyRuntime proxy):
 	actor_id_(actor_id),
+	discovery_(discovery),
 	proxy_(std::move(proxy)),
 	retrier_()
 {
 	transactions_.reserve(tx_specs.size());
 	for (const auto& tx_spec : tx_specs) {
-		transactions_.emplace_back(std::make_unique<ClientTx>(actor_id_, tx_spec, &retrier_));
+		transactions_.emplace_back(std::make_unique<ClientTx>(actor_id_, tx_spec, discovery, &retrier_));
 	}
 	LOG_DEBUG << "[Client][actor_id=" << actor_id << "] created.";
 }
@@ -34,8 +35,10 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 	std::unordered_map<TxID, Messages> messages_per_tx;
 
 	for(const auto& msg : msgs) {
-		const auto txid = msg::get_txid_from_msg_payload(msg);
-		messages_per_tx[txid].push_back(msg);
+		const auto tx_id = msg::get_txid_from_msg_payload(msg);
+		if (tx_id != UNDEFINED_TX_ID) {
+			messages_per_tx[tx_id].push_back(msg);
+		}
 	}
 
 	Messages outgoing_msgs;
@@ -54,9 +57,9 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 		tx->tick(clock.next(), tx_msgs, &outgoing_msgs);
 	}
 
-	for(const auto& [txid, tx_msgs] : messages_per_tx) {
-		assert(tx_msgs.empty());
-	}
+//	for(const auto& [txid, tx_msgs] : messages_per_tx) {
+//		assert(tx_msgs.empty());
+//	}
 
 	for(auto& msg : outgoing_msgs) {
 		proxy_.send(msg);

@@ -4,10 +4,14 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <unordered_map>
 
 #include <tx/types.h>
 #include <tx/client/client_tx_spec.h>
+#include <tx/client/tx_participant.h>
 #include <tx/retrier/retrier.h>
+#include <tx/discovery/discovery.h>
 
 namespace sdb::tx::client {
 
@@ -26,7 +30,9 @@ std::string to_string(ClientTXState state);
 
 class ClientTx final {
 public:
-	ClientTx(ActorID actor_id, const ClientTxSpec& spec, Retrier* retrier);
+	friend std::ostream& operator<<(std::ostream& stream, const ClientTx& self);
+
+	ClientTx(ActorID actor_id, const ClientTxSpec& spec, const Discovery* discovery, Retrier* retrier);
 
 	void tick(Timestamp ts, const Messages& msgs, Messages* msg_out);
 
@@ -35,9 +41,14 @@ public:
 private:
 	const ActorID actor_id_;
 	const ClientTxSpec spec_;
+	const Discovery* discovery_;
 	Retrier* retrier_;
 
 	ClientTXState state_{ClientTXState::NOT_STARTED};
+
+	ActorID coordinator_actor_id_{UNDEFINED_ACTOR_ID};
+
+	std::unordered_map<ActorID, std::unique_ptr<TxParticipant>> participants_;
 
 	TxID txid_{UNDEFINED_TX_ID};
 

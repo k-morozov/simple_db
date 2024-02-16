@@ -23,6 +23,11 @@ struct MsgPayload final {
 	const auto& get() const {
 		return std::get<T>(payload);
 	}
+
+	template<class T>
+	void set(T&& v) {
+		payload = v;
+	}
 };
 
 bool operator==(const MsgPayload& lhs, const MsgPayload& rhs);

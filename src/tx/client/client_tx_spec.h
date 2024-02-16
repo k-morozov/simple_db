@@ -34,10 +34,10 @@ struct ClientTxPut {
 
 struct ClientTxSpec final {
 	// Earliest timestamp to start the transaction.
-	Timestamp earliest_start_ts;
+	Timestamp earliest_start_ts{UNDEFINED_TS};
 
 	// Earliest timestamp to commit the transaction.
-	Timestamp earliest_commit_ts;
+	Timestamp earliest_commit_ts{UNDEFINED_TS};
 
 	std::vector<ClientTxGet> gets;
 	std::vector<ClientTxPut> puts;

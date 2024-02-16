@@ -24,12 +24,23 @@ std::string to_string(const ClientTXState state) {
 	throw std::runtime_error("broken ClientTXState for switch");
 }
 
-ClientTx::ClientTx(ActorID actor_id, const ClientTxSpec &spec, Retrier *retrier) :
+std::ostream& operator<<(std::ostream& stream, const ClientTx& self) {
+	stream << "[ClientTx]"
+		   << "[actor_id_=" << self.actor_id_ << "]"
+		   << self.spec_
+		   << "[state_=" << to_string(self.state_) << "]"
+		   << "[coordinator=" << self.coordinator_actor_id_ << "]";
+
+	return stream;
+}
+
+ClientTx::ClientTx(ActorID actor_id, const ClientTxSpec &spec, const Discovery* discovery, Retrier *retrier) :
 	actor_id_(actor_id),
 	spec_(spec),
+	discovery_(discovery),
 	retrier_(retrier)
 {
-	LOG_DEBUG << "[ClientTx][actor_id=" << actor_id_ << "] created.";
+	LOG_SELF_DEBUG << "created.";
 }
 
 void ClientTx::tick(const Timestamp ts,
@@ -41,11 +52,11 @@ void ClientTx::tick(const Timestamp ts,
 	for(const auto& msg : msgs) {
 		switch (msg.type) {
 			case msg::MessageType::MSG_START_ACK:
-				LOG_DEBUG << "[ClientTx::tick] got reply msg from server: " << msg;
+				LOG_SELF_DEBUG << "got reply msg from server: " << msg;
 				reply_messages_per_actor[msg.source].push_back(msg);
 				break;
 			default:
-				LOG_DEBUG << "[ClientTx::tick] got new msg from server: " << msg;
+				LOG_SELF_DEBUG << "got new msg from server: " << msg;
 				msg_start_tx.push_back(msg);
 				break;
 		}
@@ -56,13 +67,22 @@ void ClientTx::tick(const Timestamp ts,
 			// @todo process msgs
 
 			if (ts >= spec_.earliest_start_ts) {
-				LOG_DEBUG << "[ClientTx::tick] ts=" << ts
-					<< ", spec: " << spec_;
+				LOG_DEBUG << "[ClientTx::tick] ts=" << ts << " is greater/equal than earliest_start_ts=" << spec_.earliest_start_ts
+					<< ", configure coordinator.";
 
-				// @todo coordinator
+				coordinator_actor_id_ = discovery_->get_random();
+				LOG_DEBUG << "[ClientTx::tick] setup coordinator=" << coordinator_actor_id_;
+
+				participants_[coordinator_actor_id_] = std::make_unique<TxParticipant>(
+						get_actor_id(), coordinator_actor_id_, retrier_);
+
+				participants_[coordinator_actor_id_]->start(ts);
+
+				txid_ = participants_[coordinator_actor_id_]->txid();
 
 				LOG_DEBUG << "[ClientTx::tick] change state from " << to_string(state_)
 					<< " to " << to_string(ClientTXState::START_SENT);
+
 				state_ = ClientTXState::START_SENT;
 			}
 		}

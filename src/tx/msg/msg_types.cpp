@@ -9,14 +9,14 @@
 namespace sdb::tx::msg {
 
 bool operator==(const MsgStartPayload& lhs, const MsgStartPayload& rhs) {
-	return std::make_tuple(lhs.txid, lhs.ts)
+	return std::make_tuple(lhs.txid, lhs.read_ts)
 	==
-	std::make_tuple(rhs.txid, rhs.ts);
+	std::make_tuple(rhs.txid, rhs.read_ts);
 }
 
 std::ostream& operator<<(std::ostream& stream, const MsgStartPayload& payload) {
 	stream << "MsgStartPayload: txid=" << payload.txid
-		<< ", ts=" << payload.ts;
+		<< ", read_ts=" << payload.read_ts;
 	return stream;
 }
 

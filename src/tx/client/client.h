@@ -9,15 +9,19 @@
 #include <tx/actor.h>
 #include <tx/runtime/proxy_runtime.h>
 #include <tx/retrier/retrier.h>
+#include <tx/discovery/discovery.h>
+#include <tx/client/client_tx.h>
 
 namespace sdb::tx::client {
 
 class ClientTxSpec;
-class ClientTx;
 
-class Client: public IActor{
+class Client: public IActor {
 public:
-	Client(ActorID actor_id, const std::vector<ClientTxSpec>& tx_specs, ProxyRuntime proxy);
+	Client(ActorID actor_id,
+		   const std::vector<ClientTxSpec>& tx_specs,
+		   const Discovery* discovery,
+		   ProxyRuntime proxy);
 	~Client() override = default;
 
 	ActorID get_actor_id() const override;
@@ -26,6 +30,7 @@ public:
 
 private:
 	const ActorID actor_id_;
+	const Discovery* discovery_;
 	ProxyRuntime proxy_;
 	Retrier retrier_;
 

@@ -14,25 +14,19 @@
 
 namespace sdb::tx {
 
-// [start, end)
-struct KeyInterval final {
-	Key start;
-	Key end;
-};
-
 class Server final: public IActor {
 public:
 	using Transactions = std::unordered_map<TxID, ServerTX>;
 
 	~Server() override = default;
-	Server(ActorID actor_id, const std::vector<KeyInterval>& key_intervals, ProxyRuntime runtime);
+	Server(ActorID actor_id, const KeyIntervals& key_intervals, ProxyRuntime runtime);
 
 	ActorID get_actor_id() const override;
 
 	void send_on_tick(Clock& clock, Messages&& msgs) override;
 private:
 	const ActorID actor_id_;
-	const std::vector<KeyInterval> key_intervals_;
+	const KeyIntervals key_intervals_;
 	ProxyRuntime proxy_runtime_;
 
 	// @TODO storage

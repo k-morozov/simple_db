@@ -8,7 +8,7 @@
 #include <tuple>
 
 #include <common/log/log.h>
-#include <tx/msg/generator_msg_id.h>
+#include <tx/generator/generator.h>
 
 namespace sdb::tx::msg {
 
@@ -61,6 +61,23 @@ TxID get_txid_from_msg_payload(const msg::Message& msg) {
 	throw std::runtime_error("switch doesn't handle all cases.");
 }
 
+Message CreateMsgStart(const ActorID source, const ActorID destination) {
+	Message msg;
+	msg.type = MessageType::MSG_START;
+	msg.source = source;
+	msg.destination = destination;
+	msg.msg_id = Generator::get_next_msg_id();
+
+	MsgStartPayload payload{
+		.txid=Generator::get_next_tx_id(),
+		.read_ts=UNDEFINED_TS
+	};
+
+	msg.payload.set(payload);
+
+	return msg;
+}
+
 Message CreateMsgStartAck(const ActorID source,
 						  const ActorID destination,
 						  const TxID txid,
@@ -70,7 +87,7 @@ Message CreateMsgStartAck(const ActorID source,
 	msg.destination = destination;
 	msg.type = MessageType::MSG_START_ACK;
 
-	msg.msg_id = GeneratorMsgID::get_next_id();
+	msg.msg_id = Generator::get_next_msg_id();
 
 	MsgAckStartPayload payload{
 		.txid=txid,

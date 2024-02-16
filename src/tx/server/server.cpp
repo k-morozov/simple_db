@@ -9,7 +9,7 @@
 namespace sdb::tx {
 
 Server::Server(ActorID actor_id,
-			   const std::vector<KeyInterval>& key_intervals,
+			   const KeyIntervals& key_intervals,
 			   ProxyRuntime proxy) :
 		actor_id_(actor_id),
 		key_intervals_(key_intervals),

@@ -100,7 +100,7 @@ TEST(TestCompareMsg, CmpMsgStartPayloadFailed) {
 
 	msg1.payload.payload = MsgStartPayload{
 		.txid=10517,
-		.ts=1'000'251,
+		.read_ts=1'000'251,
 	};
 
 	{
@@ -111,7 +111,7 @@ TEST(TestCompareMsg, CmpMsgStartPayloadFailed) {
 	}
 	{
 		auto msg_another = msg1;
-		msg_another.payload.get<MsgStartPayload>().ts = 355;
+		msg_another.payload.get<MsgStartPayload>().read_ts = 355;
 
 		ASSERT_FALSE(msg1 == msg_another);
 	}
@@ -120,7 +120,7 @@ TEST(TestCompareMsg, CmpMsgStartPayloadFailed) {
 		auto msg_another = msg1;
 		msg_another.payload.payload = MsgStartPayload{
 				.txid=1,
-				.ts=1,
+				.read_ts=1,
 		};
 		ASSERT_FALSE(msg1 == msg_another);
 	}
