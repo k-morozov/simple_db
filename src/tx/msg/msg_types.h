@@ -12,7 +12,7 @@ namespace sdb::tx::msg {
 
 struct MsgStartPayload {
 	TxID txid;
-	Timestamp ts;
+	Timestamp read_ts;
 };
 
 bool operator==(const MsgStartPayload& lhs, const MsgStartPayload& rhs);

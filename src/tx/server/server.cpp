@@ -8,24 +8,8 @@
 
 namespace sdb::tx {
 
-namespace {
-
-TxID get_txid_from_msg_payload(const msg::Message& msg) {
-	switch (msg.type) {
-		case msg::MessageType::MSG_UNDEFINED:
-			return UNDEFINED_TX_ID;
-		case msg::MessageType::MSG_START:
-			return msg.payload.get<msg::MsgStartPayload>().txid;
-		case msg::MessageType::MSG_START_ACK:
-			return msg.payload.get<msg::MsgAckStartPayload>().txid;
-	}
-	throw std::runtime_error("switch doesn't handle all cases.");
-}
-
-}
-
 Server::Server(ActorID actor_id,
-			   const std::vector<KeyInterval>& key_intervals,
+			   const KeyIntervals& key_intervals,
 			   ProxyRuntime proxy) :
 		actor_id_(actor_id),
 		key_intervals_(key_intervals),
@@ -41,7 +25,7 @@ void Server::send_on_tick(Clock& clock, Messages &&income_msgs) {
 	std::unordered_map<TxID, Messages> messages_per_tx;
 
 	for (const auto& msg : income_msgs) {
-		const auto txid = get_txid_from_msg_payload(msg);
+		const auto txid = msg::get_txid_from_msg_payload(msg);
 		if (txid == UNDEFINED_TX_ID) {
 			throw std::invalid_argument("msg with undefined txid.");
 		}

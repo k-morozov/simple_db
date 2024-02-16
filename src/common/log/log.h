@@ -36,4 +36,6 @@ private:
 #define LOG_INFO Log(LogLevel::INFO)
 #define LOG_ERROR Log(LogLevel::ERROR)
 
+#define LOG_SELF_DEBUG (LOG_DEBUG << *this << " ")
+
 } // namespace sdb

@@ -8,7 +8,7 @@ add_executable(${TEST_APP_NAME}
         test_marshal.cpp
         test_tx_runtime.cpp
         test_tx_msg.cpp
-        test_tx_server_start_msg.cpp
+        test_tx_start_msg.cpp
 )
 
 target_link_libraries(${TEST_APP_NAME}

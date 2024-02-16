@@ -9,7 +9,7 @@
 #include <common/log/log.h>
 #include <tx/msg/message.h>
 #include <tx/clock/clock.h>
-#include <tx/server/retrier.h>
+#include <tx/retrier/retrier.h>
 
 namespace sdb::tx {
 

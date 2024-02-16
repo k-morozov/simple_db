@@ -25,16 +25,26 @@ add_library(simple_db
         tx/clock/clock.cpp
         tx/runtime/runtime.cpp
         tx/runtime/proxy_runtime.cpp
-        tx/server/retrier.cpp
         tx/server/server_tx.cpp
         tx/server/server.cpp
+
+        tx/retrier/retrier.cpp
+
+        tx/client/client_tx_spec.cpp
+        tx/client/client_tx.cpp
+        tx/client/client.cpp
+        tx/client/tx_participant.cpp
 
         tx/msg/message.cpp
         tx/msg/msg_payload.cpp
         tx/msg/msg_types.cpp
         tx/msg/sent_message.cpp
-        tx/msg/generator_msg_id.cpp
+
+        tx/generator/generator.cpp
+
         tx/storage/storage.cpp
+
+        tx/discovery/discovery.cpp
 )
 
 target_include_directories(simple_db PUBLIC ${SIMPLE_DB_INCLUDE_DIRS})
