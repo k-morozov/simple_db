@@ -12,6 +12,7 @@ class Generator final {
 public:
 	static MsgID get_next_msg_id();
 	static TxID get_next_tx_id();
+	static TxID get_current_tx_id();
 };
 
 } // namespace sdb::tx

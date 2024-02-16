@@ -28,4 +28,5 @@ void ProxyRuntime::send(msg::Message msg) {
 	assert(runtime);
 	runtime->send(std::move(msg));
 }
+
 } // namespace sdb::tx

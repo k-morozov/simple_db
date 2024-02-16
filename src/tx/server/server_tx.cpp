@@ -65,6 +65,8 @@ void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message ms
 			read_ts_ = ts;
 			txid_ = msg.payload.get<msg::MsgStartPayload>().txid;
 
+			LOG_DEBUG << "[ServerTX::process_msg_not_started] setup txid=" << txid_;
+
 			const auto source_for_ack = msg.destination;
 			const auto destination_for_ack = msg.source;
 

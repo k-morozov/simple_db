@@ -39,7 +39,7 @@ private:
 	const ActorID coordinator_actor_id_;
 	Retrier* retrier_;
 
-	TxID txid_;
+	TxID txid_{UNDEFINED_TX_ID};
 
 	TxParticipantState state_{TxParticipantState::NOT_STARTED};
 };

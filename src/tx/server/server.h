@@ -18,8 +18,8 @@ class Server final: public IActor {
 public:
 	using Transactions = std::unordered_map<TxID, ServerTX>;
 
-	~Server() override = default;
 	Server(ActorID actor_id, const KeyIntervals& key_intervals, ProxyRuntime runtime);
+	~Server() override = default;
 
 	ActorID get_actor_id() const override;
 

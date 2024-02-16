@@ -4,6 +4,8 @@
 
 #include "tx_participant.h"
 
+#include <cassert>
+
 #include <common/log/log.h>
 #include <tx/msg/message.h>
 
@@ -48,6 +50,8 @@ void TxParticipant::start(const Timestamp ts) {
 	auto create_msg = msg::CreateMsgStart(client_tx_actor_id_, coordinator_actor_id_);
 	txid_ = msg::get_txid_from_msg_payload(create_msg);
 
+	assert(txid_ != UNDEFINED_TX_ID);
+
 	retrier_->schedule(ts, create_msg);
 
 	LOG_SELF_DEBUG << "change state to " << TxParticipantState::START_SENT;
@@ -56,6 +60,7 @@ void TxParticipant::start(const Timestamp ts) {
 }
 
 TxID TxParticipant::txid() const {
+	assert(txid_ != UNDEFINED_TX_ID);
 	return txid_;
 }
 } // namespace sdb::tx::client

@@ -4,6 +4,7 @@
 
 #include "server.h"
 
+#include <common/log/log.h>
 #include <tx/clock/clock.h>
 
 namespace sdb::tx {

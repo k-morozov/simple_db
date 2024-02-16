@@ -13,6 +13,8 @@ class ProxyRuntime final {
 public:
 	ProxyRuntime(RuntimePtr runtime, ActorID source_actor_id);
 
+	ProxyRuntime(const ProxyRuntime&) = default;
+
 	void send(msg::Message msg);
 
 private:
