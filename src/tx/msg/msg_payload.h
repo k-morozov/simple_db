@@ -12,7 +12,12 @@
 namespace sdb::tx::msg {
 
 struct MsgPayload final {
-	std::variant<MsgStartPayload, MsgAckStartPayload> payload;
+	std::variant<
+		MsgStartPayload,
+		MsgAckStartPayload,
+		MsgPutPayload,
+		MsgPutReplyPayload
+	> payload;
 
 	template<class T>
 	auto& get() {

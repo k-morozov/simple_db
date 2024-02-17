@@ -24,6 +24,8 @@ enum class ClientTXState {
 
 	// Coordinator replied with StartAck and provided read_timestamp.
 	OPEN,
+
+	COMMIT_SENT,
 };
 
 std::ostream& operator<<(std::ostream& stream, const ClientTXState& state);
@@ -56,11 +58,17 @@ private:
 	Timestamp read_ts_{UNDEFINED_TS};
 	Timestamp commit_ts_{UNDEFINED_TS};
 
+	size_t next_get_{0};
+	size_t next_put_{0};
+
 private:
 	void configure_coordinator(Timestamp ts);
 	void configure_read_ts();
 
 	void process_replies_start_sent(const Messages& msgs);
+	void process_replies_open(const Messages& msgs);
+
+	size_t completed_requests();
 };
 
 

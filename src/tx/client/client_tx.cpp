@@ -24,6 +24,9 @@ std::ostream& operator<<(std::ostream& stream, const ClientTXState& state) {
 		case ClientTXState::OPEN:
 			stream << "OPEN";
 			break;
+		case ClientTXState::COMMIT_SENT:
+			stream << "COMMIT_SENT";
+			break;
 	}
 	return stream;
 }
@@ -43,7 +46,11 @@ void progress_state(ClientTXState* state) {
 			*state = ClientTXState::OPEN;
 			break;
 		case ClientTXState::OPEN:
-			throw std::invalid_argument("have not implemented yet.");
+			LOG_DEBUG << "[ClientTx::tick]"
+					  << " change state form OPEN to COMMIT_SENT";
+			*state = ClientTXState::COMMIT_SENT;
+		case ClientTXState::COMMIT_SENT:
+			throw std::logic_error("have not implemented yet.");
 	}
 }
 
@@ -69,7 +76,7 @@ ClientTx::ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discov
 void ClientTx::tick(const Timestamp ts,
 					const Messages& msgs,
 					Messages* msg_out) {
-	Messages msg_start_tx;
+	Messages external_msgs;
 	std::unordered_map<ActorID, Messages> reply_messages_per_actor;
 	
 	for(const auto& msg : msgs) {
@@ -80,7 +87,7 @@ void ClientTx::tick(const Timestamp ts,
 				break;
 			default:
 				LOG_SELF_DEBUG << "got new msg from server: " << msg;
-				msg_start_tx.push_back(msg);
+				external_msgs.push_back(msg);
 				break;
 		}
 	}
@@ -89,7 +96,7 @@ void ClientTx::tick(const Timestamp ts,
 		participant->process_incoming(ts, reply_messages_per_actor[actor_id]);
 	}
 
-	LOG_DEBUG << "[ClientTx::tick][state=" << state_ << "][ts=" << ts << "]";
+	LOG_DEBUG << "[ClientTx::tick][state=" << state_ << "][tx=" << txid_ << "][ts=" << ts << "]";
 	switch (state_) {
 		case ClientTXState::NOT_STARTED: {
 			assert(msgs.empty());
@@ -113,6 +120,47 @@ void ClientTx::tick(const Timestamp ts,
 				progress_state(&state_);
 			}
 		}
+		case ClientTXState::OPEN: {
+			process_replies_open(external_msgs);
+
+			if (next_put_ < spec_.puts.size() &&
+				ts >= spec_.puts[next_put_].earliest_ts) {
+				LOG_DEBUG << "[ClientTx::tick] ts=" << ts << ", next_put="
+					<< next_put_ << ", from put_spec earliest_ts="
+					<< spec_.puts[next_put_].earliest_ts;
+
+				const auto put_spec = spec_.puts[next_put_];
+				const auto key = put_spec.key;
+				const ActorID actor_id = discovery_->get_by_key(key);
+
+				// @todo maybe_init_participant - for another participant
+				participants_[actor_id]->issue_put(key, put_spec.value);
+
+				next_put_++;
+			}
+
+			const auto completed_puts = completed_requests();
+			if (completed_puts == spec_.puts.size() &&
+				ts >= spec_.earliest_commit_ts) {
+				LOG_DEBUG << "[ClientTx::tick][ts=" << ts << "] all puts done. From spec earliest_commit_ts="
+					<< spec_.earliest_commit_ts;
+
+				if (spec_.action == TxSpec::Action::COMMIT) {
+					LOG_DEBUG << "[ClientTransaction::tick]" << "[tx " << txid_ << "] send COMMIT";
+					// create commit msgs for another participant except coordinator
+					// send msg
+					progress_state(&state_);
+				}
+			}
+		}
+
+		case ClientTXState::COMMIT_SENT:
+			break;
+//			throw std::logic_error("have not implemented yet.");
+	}
+
+	for(auto& [_, participant] : participants_) {
+		participant->maybe_issue_requests(ts);
 	}
 
 	retrier_->get_ready(ts, msg_out);
@@ -138,6 +186,18 @@ void ClientTx::configure_read_ts() {
 
 void ClientTx::process_replies_start_sent(const Messages& msgs) {
 	// handled MSG_ROLLED_BACK_BY_SERVER
+}
+
+void ClientTx::process_replies_open(const Messages& msgs) {
+	// handled MSG_ROLLED_BACK_BY_SERVER
+}
+
+size_t ClientTx::completed_requests() {
+	size_t puts_completed_requests{0};
+	for (auto& [actor_id, participant] : participants_) {
+		puts_completed_requests += participant->completed_puts();
+	}
+	return puts_completed_requests;
 }
 
 } // namespace sdb::tx::client

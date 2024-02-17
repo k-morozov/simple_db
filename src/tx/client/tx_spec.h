@@ -27,7 +27,7 @@ struct ClientTxGet {
 };
 
 struct ClientTxPut {
-	Timestamp earliest_ts;
+	Timestamp earliest_ts{UNDEFINED_TS};
 	Key key;
 	Value value;
 };
@@ -42,13 +42,13 @@ struct TxSpec final {
 	std::vector<ClientTxGet> gets;
 	std::vector<ClientTxPut> puts;
 
-	enum class State {
+	enum class Action {
 		UNDEFINED,
 		COMMIT,
 		ROLLBACK,
 	};
 
-	State action{State::UNDEFINED};
+	Action action{Action::UNDEFINED};
 };
 
 std::ostream& operator<<(std::ostream& stream, const TxSpec& spec);

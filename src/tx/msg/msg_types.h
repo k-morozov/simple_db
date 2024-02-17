@@ -26,4 +26,21 @@ struct MsgAckStartPayload {
 bool operator==(const MsgAckStartPayload& lhs, const MsgAckStartPayload& rhs);
 std::ostream& operator<<(std::ostream& stream, const MsgAckStartPayload& payload);
 
+struct MsgPutPayload {
+	TxID txid;
+	Key key;
+	Value value;
+};
+
+bool operator==(const MsgPutPayload& lhs, const MsgPutPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgPutPayload& payload);
+
+struct MsgPutReplyPayload {
+	TxID txid;
+	MsgID msg_id;
+};
+
+bool operator==(const MsgPutReplyPayload& lhs, const MsgPutReplyPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgPutReplyPayload& payload);
+
 } // namespace sdb::tx::msg

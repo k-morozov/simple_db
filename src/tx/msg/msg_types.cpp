@@ -32,4 +32,27 @@ std::ostream& operator<<(std::ostream& stream, const MsgAckStartPayload& payload
 	return stream;
 }
 
+bool operator==(const MsgPutPayload& lhs, const MsgPutPayload& rhs) {
+	return std::make_tuple(lhs.txid, lhs.key, lhs.value)
+		   ==
+		   std::make_tuple(rhs.txid, rhs.key, rhs.value);
+}
+std::ostream& operator<<(std::ostream& stream, const MsgPutPayload& payload) {
+	stream << "MsgPutPayload: txid=" << payload.txid
+		   << ", key=" << payload.key
+		   << ", value=" << payload.value;
+	return stream;
+}
+
+bool operator==(const MsgPutReplyPayload& lhs, const MsgPutReplyPayload& rhs) {
+	return std::make_tuple(lhs.txid, lhs.msg_id)
+		   ==
+		   std::make_tuple(rhs.txid, rhs.msg_id);
+}
+std::ostream& operator<<(std::ostream& stream, const MsgPutReplyPayload& payload) {
+	stream << "MsgPutReplyPayload: txid=" << payload.txid
+		   << ", msg_id=" << payload.msg_id;
+	return stream;
+}
+
 } // namespace sdb::tx::msg

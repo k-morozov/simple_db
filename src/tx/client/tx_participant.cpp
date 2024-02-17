@@ -64,7 +64,7 @@ TxID TxParticipant::txid() const {
 	return txid_;
 }
 
-void TxParticipant::process_incoming(Timestamp ts, const Messages &msgs) {
+void TxParticipant::process_incoming(const Timestamp ts, const Messages &msgs) {
 	LOG_DEBUG << "[TxParticipant::process_incoming][ts=" <<
 		ts << "][state=" << state_ << "] called";
 
@@ -75,7 +75,23 @@ void TxParticipant::process_incoming(Timestamp ts, const Messages &msgs) {
 			process_replies_start_sent(msgs);
 			break;
 		case TxParticipantState::OPEN:
-			throw std::invalid_argument("Doesn't implemented yet");
+			process_replies_open(msgs);
+	}
+}
+
+void TxParticipant::maybe_issue_requests(const Timestamp ts) {
+	if(state_ != TxParticipantState::OPEN) {
+		LOG_DEBUG << "[TxParticipant::maybe_issue_requests] available only in OPEN state";
+		return;
+	}
+
+	for(; next_put_ < put_status_.size(); next_put_++) {
+		put_status_[next_put_].status = RequestState::Status::REQUEST_START;
+
+		auto msg = msg::CreateMsgPut(client_tx_actor_id_, coordinator_actor_id_, txid_,
+									 put_status_[next_put_].key, put_status_[next_put_].value);
+		retrier_->schedule(ts, msg);
+		put_request_[msg.msg_id] = next_put_;
 	}
 }
 
@@ -105,6 +121,27 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 		<< " to " << next_state;
 
 	state_ = next_state;
+}
+
+void TxParticipant::process_replies_open(const Messages& msgs) {
+	for(const auto& msg : msgs) {
+		switch (msg.type) {
+			case msg::MessageType::MSG_PUT_REPLY:
+				// @TODO process response
+				throw std::invalid_argument("Doesn't implemented yet");
+				break;
+			default:
+				throw std::logic_error("process_replies_open work only with MSG_PUT_REPLY");
+		}
+	}
+}
+
+void TxParticipant::issue_put(Key key, Value value) {
+	put_status_.push_back(RequestState{
+		.status=RequestState::Status::REQUEST_NOT_STARTED,
+		.key=key,
+		.value=value
+	});
 }
 
 } // namespace sdb::tx::client

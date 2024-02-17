@@ -19,14 +19,11 @@ enum class MessageType: uint8_t {
 	MSG_UNDEFINED,
 	MSG_START,
 	MSG_START_ACK,
+	MSG_PUT,
+	MSG_PUT_REPLY
 };
 
 std::ostream& operator<<(std::ostream& stream, MessageType type);
-
-enum class ErrorParseMsg {
-	TXID_NOT_SET,
-	NO_SUPPORT_MSG_TYPE
-};
 
 // @todo change variant
 struct Message {
@@ -48,5 +45,8 @@ TxID get_txid_from_msg_payload(const msg::Message& msg);
 Message CreateMsgStart(ActorID source, ActorID destination);
 // @todo create from msg
 Message CreateMsgStartAck(ActorID source, ActorID destination, TxID txid, Timestamp read_ts);
+
+Message CreateMsgPut(ActorID source, ActorID destination, TxID txid, Key key, Value value);
+Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID msg_id);
 
 } // namespace sdb::tx::msg

@@ -6,6 +6,7 @@
 
 #include <ostream>
 #include <cassert>
+#include <unordered_map>
 
 #include <tx/types.h>
 #include <tx/retrier/retrier.h>
@@ -19,6 +20,17 @@ enum class TxParticipantState {
 };
 
 std::ostream& operator<<(std::ostream& stream, TxParticipantState state);
+
+struct RequestState final {
+	enum class Status {
+		REQUEST_NOT_STARTED,
+		REQUEST_START,
+		REQUEST_COMPLETED
+	};
+	Status status{Status::REQUEST_NOT_STARTED};
+	Key key;
+	Value value;
+};
 
 class TxParticipant final {
 public:
@@ -40,6 +52,12 @@ public:
 
 	void process_incoming(Timestamp ts, const Messages& msgs);
 
+	void maybe_issue_requests(Timestamp ts);
+
+	void issue_put(Key key, Value value);
+
+	size_t completed_puts() const { return completed_puts_; }
+
 private:
 	const ActorID client_tx_actor_id_;
 	const ActorID coordinator_actor_id_;
@@ -50,10 +68,20 @@ private:
 
 	TxParticipantState state_{TxParticipantState::NOT_STARTED};
 
+	std::vector<RequestState> put_status_;
+
+	size_t next_put_{0};
+
+	size_t completed_puts_{0};
+
+	std::unordered_map<MsgID, size_t> put_request_;
+private:
 	/*
 	 * We can setup read_ts from msg and change state to OPEN.
 	 * */
 	void process_replies_start_sent(const Messages& msgs);
+
+	void process_replies_open(const Messages& msgs);
 };
 
 

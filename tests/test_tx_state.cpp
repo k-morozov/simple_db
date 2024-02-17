@@ -63,7 +63,19 @@ public:
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<Discovery> discovery;
-	client::TxSpec spec{};
+	client::TxSpec spec{
+		.earliest_start_ts=0,
+		.earliest_commit_ts=2,
+		.gets={},
+		.puts={
+			client::ClientTxPut{
+				.earliest_ts=2,
+				.key=17,
+				.value=1177
+			}
+		},
+		.action=client::TxSpec::Action::COMMIT
+	};
 };
 
 TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
@@ -109,6 +121,23 @@ TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
 	ASSERT_TRUE(LightCmpMsg(actual_msg, expected_msg));
 	ASSERT_EQ(actual_msg.payload.get<msg::MsgAckStartPayload>().txid,
 			  expected_msg.payload.get<msg::MsgAckStartPayload>().txid);
+
+	constexpr Key key1 = 17;
+	constexpr Value value1 = 1177;
+	auto put_msg = msg::CreateMsgPut(
+			test_client_actor_id,
+			server_actor_id,
+			get_txid_from_msg_payload(actual_msg),
+			key1,
+			value1
+	);
+
+	msgs.clear();
+	msgs.push_back(put_msg);
+
+	client.send_on_tick(clock, std::move(msgs));
+
+	runtime->run();
 }
 
 TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromSomeActors) {
