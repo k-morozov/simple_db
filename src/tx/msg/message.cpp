@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 std::ostream& operator<<(std::ostream& stream, const Message& msg) {
 	stream << "message "
 		   	<< "[type=" << msg.type << "]"
-		   	<< "[id=" << msg.msg_id << "]"
+		   	<< "[msg_id=" << msg.msg_id << "]"
 		   	<< "[source " << msg.source << "]"
 		   	<< "[destination " << msg.destination << "]"
 			<< " with payload: " << msg.payload;
@@ -136,7 +136,7 @@ Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID 
 	msg.source = source;
 	msg.destination = destination;
 
-	msg.msg_id = msg_id;
+	msg.msg_id = Generator::get_next_msg_id();
 
 	MsgPutReplyPayload payload{
 			.txid=txid,

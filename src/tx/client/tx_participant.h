@@ -74,6 +74,7 @@ private:
 
 	size_t completed_puts_{0};
 
+	// @todo rename
 	std::unordered_map<MsgID, size_t> put_request_;
 private:
 	/*

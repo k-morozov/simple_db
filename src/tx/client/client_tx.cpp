@@ -82,6 +82,7 @@ void ClientTx::tick(const Timestamp ts,
 	for(const auto& msg : msgs) {
 		switch (msg.type) {
 			case msg::MessageType::MSG_START_ACK:
+			case msg::MessageType::MSG_PUT_REPLY:
 				LOG_SELF_DEBUG << "got reply msg from server: " << msg;
 				reply_messages_per_actor[msg.source].push_back(msg);
 				break;

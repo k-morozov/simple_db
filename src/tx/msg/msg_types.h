@@ -37,6 +37,7 @@ std::ostream& operator<<(std::ostream& stream, const MsgPutPayload& payload);
 
 struct MsgPutReplyPayload {
 	TxID txid;
+	// original_msg_id
 	MsgID msg_id;
 };
 

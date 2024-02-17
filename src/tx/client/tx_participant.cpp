@@ -125,11 +125,26 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 
 void TxParticipant::process_replies_open(const Messages& msgs) {
 	for(const auto& msg : msgs) {
+		LOG_DEBUG << "[TxParticipant::process_replies_open]" << msg;
+
 		switch (msg.type) {
-			case msg::MessageType::MSG_PUT_REPLY:
-				// @TODO process response
-				throw std::invalid_argument("Doesn't implemented yet");
+			case msg::MessageType::MSG_PUT_REPLY: {
+				const auto original_msg_id = msg.payload.get<msg::MsgPutReplyPayload>().msg_id;
+				if (put_request_.contains(original_msg_id)) {
+					const auto old_next_put = put_request_[original_msg_id];
+					if (put_status_[old_next_put].status == RequestState::Status::REQUEST_START) {
+						put_status_[old_next_put].status = RequestState::Status::REQUEST_COMPLETED;
+						completed_puts_++;
+
+						LOG_DEBUG << "[TxParticipant::process_replies_open]"
+							<< " old_next_put=" << old_next_put << " set status REQUEST_COMPLETED"
+							<< ", completed_puts=" << completed_puts_;
+					}
+				} else {
+					// log error
+				}
 				break;
+			}
 			default:
 				throw std::logic_error("process_replies_open work only with MSG_PUT_REPLY");
 		}
