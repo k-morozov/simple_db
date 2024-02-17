@@ -43,7 +43,7 @@ std::ostream& operator<<(std::ostream& stream, const Message& msg);
 bool operator==(const Message& lhs, const Message& rhs);
 bool operator<(const Message& lhs, const Message& rhs);
 
-std::expected<TxID, ErrorParseMsg> auto get_txid_from_msg_payload(const msg::Message& msg);
+TxID get_txid_from_msg_payload(const msg::Message& msg);
 
 Message CreateMsgStart(ActorID source, ActorID destination);
 // @todo create from msg

@@ -48,6 +48,10 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 		if (txid != UNDEFINED_TX_ID) {
 			messages_per_tx[txid].push_back(msg);
 		}
+
+		// stab for test
+		if (msg.type == msg::MessageType::MSG_START_ACK)
+			return;
 	}
 
 	Messages outgoing_msgs;

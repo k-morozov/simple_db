@@ -27,7 +27,7 @@ enum class ClientTXState {
 };
 
 std::string to_string(ClientTXState state);
-void progress_state(ClientTXState& state);
+void progress_state(ClientTXState* state);
 
 class ClientTx final {
 public:

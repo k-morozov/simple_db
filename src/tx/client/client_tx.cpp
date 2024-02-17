@@ -25,10 +25,12 @@ std::string to_string(const ClientTXState state) {
 	throw std::runtime_error("broken ClientTXState for switch");
 }
 
-void progress_state(ClientTXState& state) {
-	switch (state) {
+void progress_state(ClientTXState* state) {
+	assert(state);
+
+	switch (*state) {
 		case ClientTXState::NOT_STARTED:
-			state = ClientTXState::START_SENT;
+			*state = ClientTXState::START_SENT;
 			break;
 		case ClientTXState::START_SENT:
 		case ClientTXState::OPEN:
@@ -88,7 +90,7 @@ void ClientTx::tick(const Timestamp ts,
 				LOG_DEBUG << "[ClientTx::tick] change state from " << to_string(state_)
 					<< " to " << to_string(ClientTXState::START_SENT);
 
-				progress_state(state_);
+				progress_state(&state_);
 			}
 		}
 			break;

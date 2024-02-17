@@ -65,7 +65,7 @@ void Runtime::fill_destination_actor_messages() {
 		auto sent_msg = messages_queue_.top();
 		messages_queue_.pop();
 
-		LOG_DEBUG << "Take top msg from messages_queue. " << sent_msg;
+		LOG_DEBUG << "[Runtime] Take top msg from messages_queue. " << sent_msg;
 
 		auto it = destination_actor_messages_.find(sent_msg.msg.destination);
 		if (it == destination_actor_messages_.end()) {

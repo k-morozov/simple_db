@@ -35,7 +35,7 @@ bool LightCmpMsg(const Message& lhs, const Message& rhs) {
 	return true;
 }
 
-class RuntimeTxStartMsgFixture : public ::testing::Test {
+class RuntimeTxFixture : public ::testing::Test {
 public:
 	void SetUp() override {
 		runtime = std::make_shared<Runtime>();
@@ -66,13 +66,12 @@ public:
 	client::TxSpec spec{};
 };
 
-TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
-	auto actor1 = common::FakeActor(builder);
-	ASSERT_NO_THROW(runtime->register_actor(&actor1));
+TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
+	const auto test_client_actor_id = builder();
+	auto proxy_client = ProxyRuntime(runtime, test_client_actor_id);
+	common::TestClient client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
 
-	auto proxy_client = ProxyRuntime(runtime, actor1.get_actor_id());
-
-	client::Client client(actor1.get_actor_id(), {spec}, discovery.get(), proxy_client);
+	ASSERT_NO_THROW(runtime->register_actor(&client));
 
 	Messages msgs;
 
@@ -84,7 +83,7 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 
 	msgs.push_back(msg::Message{
 			.type=msg::MessageType::MSG_UNDEFINED,
-			.source=actor1.get_actor_id(),
+			.source=test_client_actor_id,
 			.destination=server_actor_id,
 			.msg_id=msg_id,
 	});
@@ -93,11 +92,11 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 
 	runtime->run();
 
-	const auto actual_mag = actor1.total.front();
+	const auto actual_msg = client.total.front();
 	const auto expected_msg = msg::Message{
 			.type=msg::MessageType::MSG_START_ACK,
 			.source=server_actor_id,
-			.destination=actor1.get_actor_id(),
+			.destination=test_client_actor_id,
 			.msg_id=expected_msg_id_ack,
 			.payload=msg::MsgPayload{
 					.payload=msg::MsgAckStartPayload{
@@ -107,12 +106,12 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 			}
 	};
 
-	ASSERT_TRUE(LightCmpMsg(actual_mag, expected_msg));
-	ASSERT_EQ(actual_mag.payload.get<msg::MsgAckStartPayload>().txid,
+	ASSERT_TRUE(LightCmpMsg(actual_msg, expected_msg));
+	ASSERT_EQ(actual_msg.payload.get<msg::MsgAckStartPayload>().txid,
 			  expected_msg.payload.get<msg::MsgAckStartPayload>().txid);
 }
 
-TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromSomeActors) {
+TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromSomeActors) {
 	auto actor1 = common::FakeActor(builder);
 	auto actor2 = common::FakeActor(builder);
 
