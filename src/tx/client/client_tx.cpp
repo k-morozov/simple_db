@@ -13,16 +13,19 @@
 
 namespace sdb::tx::client {
 
-std::string to_string(const ClientTXState state) {
+std::ostream& operator<<(std::ostream& stream, const ClientTXState& state) {
 	switch (state) {
 		case ClientTXState::NOT_STARTED:
-			return "NOT_STARTED";
+			stream << "NOT_STARTED";
+			break;
 		case ClientTXState::START_SENT:
-			return "START_SENT";
+			stream << "START_SENT";
+			break;
 		case ClientTXState::OPEN:
-			return "OPEN";
+			stream << "OPEN";
+			break;
 	}
-	throw std::runtime_error("broken ClientTXState for switch");
+	return stream;
 }
 
 void progress_state(ClientTXState* state) {
@@ -30,9 +33,15 @@ void progress_state(ClientTXState* state) {
 
 	switch (*state) {
 		case ClientTXState::NOT_STARTED:
+			LOG_DEBUG << "[ClientTx::tick]"
+					  << " change state form NOT_STARTED to START_SENT";
 			*state = ClientTXState::START_SENT;
 			break;
 		case ClientTXState::START_SENT:
+			LOG_DEBUG << "[ClientTx::tick]"
+					  << " change state form START_SENT to OPEN";
+			*state = ClientTXState::OPEN;
+			break;
 		case ClientTXState::OPEN:
 			throw std::invalid_argument("have not implemented yet.");
 	}
@@ -42,7 +51,7 @@ std::ostream& operator<<(std::ostream& stream, const ClientTx& self) {
 	stream << "[ClientTx]"
 		   << "[actor_id_=" << self.actor_id_ << "]"
 		   << self.spec_
-		   << "[state_=" << to_string(self.state_) << "]"
+		   << "[state_=" << self.state_ << "]"
 		   << "[coordinator=" << self.coordinator_actor_id_ << "]";
 
 	return stream;
@@ -76,6 +85,11 @@ void ClientTx::tick(const Timestamp ts,
 		}
 	}
 
+	for(auto& [actor_id, participant] : participants_) {
+		participant->process_incoming(ts, reply_messages_per_actor[actor_id]);
+	}
+
+	LOG_DEBUG << "[ClientTx::tick][state=" << state_ << "][ts=" << ts << "]";
 	switch (state_) {
 		case ClientTXState::NOT_STARTED: {
 			assert(msgs.empty());
@@ -86,14 +100,19 @@ void ClientTx::tick(const Timestamp ts,
 					<< ", configure coordinator.";
 
 				configure_coordinator(ts);
+				progress_state(&state_);
+			}
+			break;
+		}
+		case ClientTXState::START_SENT: {
+			process_replies_start_sent(msgs);
 
-				LOG_DEBUG << "[ClientTx::tick] change state from " << to_string(state_)
-					<< " to " << to_string(ClientTXState::START_SENT);
-
+			assert(participants_.at(coordinator_actor_id_));
+			if (participants_[coordinator_actor_id_]->is_open()) {
+				configure_read_ts();
 				progress_state(&state_);
 			}
 		}
-			break;
 	}
 
 	retrier_->get_ready(ts, msg_out);
@@ -109,6 +128,16 @@ void ClientTx::configure_coordinator(const Timestamp ts) {
 	participants_[coordinator_actor_id_]->start(ts);
 
 	txid_ = participants_[coordinator_actor_id_]->txid();
+}
+
+void ClientTx::configure_read_ts() {
+	read_ts_ = participants_[coordinator_actor_id_]->read_ts();
+	LOG_DEBUG << "[ClientTx::tick][state=" << state_ << "]"
+			  << " setup read_ts=" << read_ts_;
+}
+
+void ClientTx::process_replies_start_sent(const Messages& msgs) {
+	// handled MSG_ROLLED_BACK_BY_SERVER
 }
 
 } // namespace sdb::tx::client

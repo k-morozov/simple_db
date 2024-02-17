@@ -63,4 +63,48 @@ TxID TxParticipant::txid() const {
 	assert(txid_ != UNDEFINED_TX_ID);
 	return txid_;
 }
+
+void TxParticipant::process_incoming(Timestamp ts, const Messages &msgs) {
+	LOG_DEBUG << "[TxParticipant::process_incoming][ts=" <<
+		ts << "][state=" << state_ << "] called";
+
+	switch (state_) {
+		case TxParticipantState::NOT_STARTED:
+			throw std::invalid_argument("process_incoming not working with NOT_STARTED state");
+		case TxParticipantState::START_SENT:
+			process_replies_start_sent(msgs);
+			break;
+		case TxParticipantState::OPEN:
+			throw std::invalid_argument("Doesn't implemented yet");
+	}
+}
+
+void TxParticipant::process_replies_start_sent(const Messages &msgs) {
+	Timestamp ts{UNDEFINED_TS};
+
+	for(const auto& msg : msgs) {
+		switch (msg.type) {
+			case msg::MessageType::MSG_START_ACK:
+				ts = msg.payload.get<msg::MsgAckStartPayload>().read_ts;
+				break;
+			default:
+				throw std::logic_error("process_replies_start_sent work only with MSG_START_ACK");
+		}
+	}
+
+	assert(read_ts_ == UNDEFINED_TS);
+	assert(ts != UNDEFINED_TS);
+
+	read_ts_ = ts;
+
+	constexpr auto next_state = TxParticipantState::OPEN;
+
+	LOG_DEBUG << "[TxParticipant::process_replies_start_sent]"
+		<< " setup read_ts=" << read_ts_
+		<< " and change state from " << state_
+		<< " to " << next_state;
+
+	state_ = next_state;
+}
+
 } // namespace sdb::tx::client

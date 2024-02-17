@@ -26,7 +26,7 @@ enum class ClientTXState {
 	OPEN,
 };
 
-std::string to_string(ClientTXState state);
+std::ostream& operator<<(std::ostream& stream, const ClientTXState& state);
 void progress_state(ClientTXState* state);
 
 class ClientTx final {
@@ -58,6 +58,9 @@ private:
 
 private:
 	void configure_coordinator(Timestamp ts);
+	void configure_read_ts();
+
+	void process_replies_start_sent(const Messages& msgs);
 };
 
 
