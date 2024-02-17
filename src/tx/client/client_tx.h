@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 #include <tx/types.h>
-#include <tx/client/client_tx_spec.h>
+#include <tx/client/tx_spec.h>
 #include <tx/client/tx_participant.h>
 #include <tx/retrier/retrier.h>
 #include <tx/discovery/discovery.h>
@@ -27,12 +27,13 @@ enum class ClientTXState {
 };
 
 std::string to_string(ClientTXState state);
+void progress_state(ClientTXState& state);
 
 class ClientTx final {
 public:
 	friend std::ostream& operator<<(std::ostream& stream, const ClientTx& self);
 
-	ClientTx(ActorID actor_id, const ClientTxSpec& spec, const Discovery* discovery, Retrier* retrier);
+	ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discovery, Retrier* retrier);
 
 	void tick(Timestamp ts, const Messages& msgs, Messages* msg_out);
 
@@ -40,7 +41,7 @@ public:
 	TxID get_tx_id() const noexcept { return txid_;}
 private:
 	const ActorID actor_id_;
-	const ClientTxSpec spec_;
+	const TxSpec spec_;
 	const Discovery* discovery_;
 	Retrier* retrier_;
 
@@ -55,6 +56,8 @@ private:
 	Timestamp read_ts_{UNDEFINED_TS};
 	Timestamp commit_ts_{UNDEFINED_TS};
 
+private:
+	void configure_coordinator(Timestamp ts);
 };
 
 

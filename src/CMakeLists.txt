@@ -30,7 +30,7 @@ add_library(simple_db
 
         tx/retrier/retrier.cpp
 
-        tx/client/client_tx_spec.cpp
+        tx/client/tx_spec.cpp
         tx/client/client_tx.cpp
         tx/client/client.cpp
         tx/client/tx_participant.cpp

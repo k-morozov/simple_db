@@ -13,7 +13,7 @@
 #include <tx/generator/generator.h>
 #include <tx/discovery/discovery.h>
 #include <tx/client/client.h>
-#include <tx/client/client_tx_spec.h>
+#include <tx/client/tx_spec.h>
 
 #include "common/fake_actor.h"
 
@@ -63,7 +63,7 @@ public:
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<Discovery> discovery;
-	client::ClientTxSpec spec;
+	client::TxSpec spec{};
 };
 
 TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <concepts>
+#include <expected>
 #include <cstdint>
 #include <string>
 
@@ -21,6 +23,11 @@ enum class MessageType: uint8_t {
 
 std::ostream& operator<<(std::ostream& stream, MessageType type);
 
+enum class ErrorParseMsg {
+	TXID_NOT_SET,
+	NO_SUPPORT_MSG_TYPE
+};
+
 // @todo change variant
 struct Message {
 	MessageType type{MessageType::MSG_UNDEFINED};
@@ -36,7 +43,7 @@ std::ostream& operator<<(std::ostream& stream, const Message& msg);
 bool operator==(const Message& lhs, const Message& rhs);
 bool operator<(const Message& lhs, const Message& rhs);
 
-TxID get_txid_from_msg_payload(const msg::Message& msg);
+std::expected<TxID, ErrorParseMsg> auto get_txid_from_msg_payload(const msg::Message& msg);
 
 Message CreateMsgStart(ActorID source, ActorID destination);
 // @todo create from msg
