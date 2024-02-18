@@ -4,10 +4,13 @@
 
 #pragma once
 
+#include <tx/client/client.h>
 #include <tx/actor.h>
 #include <tx/msg/message.h>
 
 namespace common {
+
+using namespace sdb::tx;
 
 class GeneratorActorID final {
 public:
@@ -43,6 +46,24 @@ public:
 
 private:
 	const sdb::tx::ActorID actor_id;
+};
+
+class TestClient: public client::Client {
+public:
+	explicit TestClient(ActorID actor_id,
+						const std::vector<client::TxSpec>& tx_specs,
+						const Discovery* discovery,
+						ProxyRuntime proxy) :
+			Client(actor_id, tx_specs, discovery, proxy)
+	{};
+
+	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
+		total.clear();
+		std::copy(std::begin(msgs), std::end(msgs), std::back_inserter(total));
+		client::Client::send_on_tick(clock, std::move(msgs));
+	}
+
+	sdb::tx::Messages total;
 };
 
 } // namespace common

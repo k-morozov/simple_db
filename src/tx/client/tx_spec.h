@@ -13,7 +13,7 @@ namespace sdb::tx::client {
 
 /*
  *
- * ClientTxSpec describes what should be done in a given
+ * TxSpec describes what should be done in a given
  * transaction. It lists all Get and Put requests that the client
  * will perform in the transaction.
  * It also specifies whether the transaction is committed or rolled
@@ -27,12 +27,12 @@ struct ClientTxGet {
 };
 
 struct ClientTxPut {
-	Timestamp earliest_ts;
+	Timestamp earliest_ts{UNDEFINED_TS};
 	Key key;
 	Value value;
 };
 
-struct ClientTxSpec final {
+struct TxSpec final {
 	// Earliest timestamp to start the transaction.
 	Timestamp earliest_start_ts{UNDEFINED_TS};
 
@@ -42,15 +42,15 @@ struct ClientTxSpec final {
 	std::vector<ClientTxGet> gets;
 	std::vector<ClientTxPut> puts;
 
-	enum class State {
+	enum class Action {
 		UNDEFINED,
 		COMMIT,
 		ROLLBACK,
 	};
 
-	State action{State::UNDEFINED};
+	Action action{Action::UNDEFINED};
 };
 
-std::ostream& operator<<(std::ostream& stream, const ClientTxSpec& spec);
+std::ostream& operator<<(std::ostream& stream, const TxSpec& spec);
 
 } // namespace sdb::tx::client

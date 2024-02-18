@@ -14,12 +14,12 @@
 
 namespace sdb::tx::client {
 
-class ClientTxSpec;
+class TxSpec;
 
 class Client: public IActor {
 public:
 	Client(ActorID actor_id,
-		   const std::vector<ClientTxSpec>& tx_specs,
+		   const std::vector<TxSpec>& tx_specs,
 		   const Discovery* discovery,
 		   ProxyRuntime proxy);
 	~Client() override = default;

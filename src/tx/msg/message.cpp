@@ -23,6 +23,12 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 		case MessageType::MSG_START_ACK:
 			stream << "MSG_START_ACK";
 			break;
+		case MessageType::MSG_PUT:
+			stream << "MSG_PUT";
+			break;
+		case MessageType::MSG_PUT_REPLY:
+			stream << "MSG_PUT_REPLY";
+			break;
 	}
 	return stream;
 }
@@ -30,7 +36,7 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 std::ostream& operator<<(std::ostream& stream, const Message& msg) {
 	stream << "message "
 		   	<< "[type=" << msg.type << "]"
-		   	<< "[id=" << msg.msg_id << "]"
+		   	<< "[msg_id=" << msg.msg_id << "]"
 		   	<< "[source " << msg.source << "]"
 		   	<< "[destination " << msg.destination << "]"
 			<< " with payload: " << msg.payload;
@@ -57,6 +63,10 @@ TxID get_txid_from_msg_payload(const msg::Message& msg) {
 			return msg.payload.get<msg::MsgStartPayload>().txid;
 		case msg::MessageType::MSG_START_ACK:
 			return msg.payload.get<msg::MsgAckStartPayload>().txid;
+		case msg::MessageType::MSG_PUT:
+			return msg.payload.get<msg::MsgPutPayload>().txid;
+		case msg::MessageType::MSG_PUT_REPLY:
+			return msg.payload.get<msg::MsgPutReplyPayload>().txid;
 	}
 	throw std::runtime_error("switch doesn't handle all cases.");
 }
@@ -97,6 +107,43 @@ Message CreateMsgStartAck(const ActorID source,
 	msg.payload.payload = payload;
 
 	LOG_DEBUG << "CreateMsgStartAck: " << msg;
+
+	return msg;
+}
+
+Message CreateMsgPut(ActorID source, ActorID destination, TxID txid, Key key, Value value) {
+	Message msg;
+	msg.type = MessageType::MSG_PUT;
+	msg.source = source;
+	msg.destination = destination;
+
+	msg.msg_id = Generator::get_next_msg_id();
+
+	MsgPutPayload payload{
+		.txid=txid,
+		.key=key,
+		.value=value
+	};
+
+	msg.payload.payload = payload;
+
+	return msg;
+}
+
+Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID msg_id) {
+	Message msg;
+	msg.type = MessageType::MSG_PUT_REPLY;
+	msg.source = source;
+	msg.destination = destination;
+
+	msg.msg_id = Generator::get_next_msg_id();
+
+	MsgPutReplyPayload payload{
+			.txid=txid,
+			.msg_id=msg_id
+	};
+
+	msg.payload.payload = payload;
 
 	return msg;
 }

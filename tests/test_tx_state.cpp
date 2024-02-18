@@ -13,7 +13,7 @@
 #include <tx/generator/generator.h>
 #include <tx/discovery/discovery.h>
 #include <tx/client/client.h>
-#include <tx/client/client_tx_spec.h>
+#include <tx/client/tx_spec.h>
 
 #include "common/fake_actor.h"
 
@@ -35,7 +35,7 @@ bool LightCmpMsg(const Message& lhs, const Message& rhs) {
 	return true;
 }
 
-class RuntimeTxStartMsgFixture : public ::testing::Test {
+class RuntimeTxFixture : public ::testing::Test {
 public:
 	void SetUp() override {
 		runtime = std::make_shared<Runtime>();
@@ -63,16 +63,27 @@ public:
 
 	std::unique_ptr<Server> server;
 	std::unique_ptr<Discovery> discovery;
-	client::ClientTxSpec spec;
+	client::TxSpec spec{
+		.earliest_start_ts=0,
+		.earliest_commit_ts=2,
+		.gets={},
+		.puts={
+			client::ClientTxPut{
+				.earliest_ts=2,
+				.key=17,
+				.value=1177
+			}
+		},
+		.action=client::TxSpec::Action::COMMIT
+	};
 };
 
-TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
-	auto actor1 = common::FakeActor(builder);
-	ASSERT_NO_THROW(runtime->register_actor(&actor1));
+TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
+	const auto test_client_actor_id = builder();
+	auto proxy_client = ProxyRuntime(runtime, test_client_actor_id);
+	common::TestClient client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
 
-	auto proxy_client = ProxyRuntime(runtime, actor1.get_actor_id());
-
-	client::Client client(actor1.get_actor_id(), {spec}, discovery.get(), proxy_client);
+	ASSERT_NO_THROW(runtime->register_actor(&client));
 
 	Messages msgs;
 
@@ -84,7 +95,7 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 
 	msgs.push_back(msg::Message{
 			.type=msg::MessageType::MSG_UNDEFINED,
-			.source=actor1.get_actor_id(),
+			.source=test_client_actor_id,
 			.destination=server_actor_id,
 			.msg_id=msg_id,
 	});
@@ -93,11 +104,11 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 
 	runtime->run();
 
-	const auto actual_mag = actor1.total.front();
+	const auto actual_msg = client.total.front();
 	const auto expected_msg = msg::Message{
 			.type=msg::MessageType::MSG_START_ACK,
 			.source=server_actor_id,
-			.destination=actor1.get_actor_id(),
+			.destination=test_client_actor_id,
 			.msg_id=expected_msg_id_ack,
 			.payload=msg::MsgPayload{
 					.payload=msg::MsgAckStartPayload{
@@ -107,12 +118,29 @@ TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromActor) {
 			}
 	};
 
-	ASSERT_TRUE(LightCmpMsg(actual_mag, expected_msg));
-	ASSERT_EQ(actual_mag.payload.get<msg::MsgAckStartPayload>().txid,
+	ASSERT_TRUE(LightCmpMsg(actual_msg, expected_msg));
+	ASSERT_EQ(actual_msg.payload.get<msg::MsgAckStartPayload>().txid,
 			  expected_msg.payload.get<msg::MsgAckStartPayload>().txid);
+
+	constexpr Key key1 = 17;
+	constexpr Value value1 = 1177;
+	auto put_msg = msg::CreateMsgPut(
+			test_client_actor_id,
+			server_actor_id,
+			get_txid_from_msg_payload(actual_msg),
+			key1,
+			value1
+	);
+
+	msgs.clear();
+	msgs.push_back(put_msg);
+
+	client.send_on_tick(clock, std::move(msgs));
+
+	runtime->run();
 }
 
-TEST_F(RuntimeTxStartMsgFixture, SimpleSendMsgFromSomeActors) {
+TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromSomeActors) {
 	auto actor1 = common::FakeActor(builder);
 	auto actor2 = common::FakeActor(builder);
 

@@ -63,4 +63,100 @@ TxID TxParticipant::txid() const {
 	assert(txid_ != UNDEFINED_TX_ID);
 	return txid_;
 }
+
+void TxParticipant::process_incoming(const Timestamp ts, const Messages &msgs) {
+	LOG_DEBUG << "[TxParticipant::process_incoming][ts=" <<
+		ts << "][state=" << state_ << "] called";
+
+	switch (state_) {
+		case TxParticipantState::NOT_STARTED:
+			throw std::invalid_argument("process_incoming not working with NOT_STARTED state");
+		case TxParticipantState::START_SENT:
+			process_replies_start_sent(msgs);
+			break;
+		case TxParticipantState::OPEN:
+			process_replies_open(msgs);
+	}
+}
+
+void TxParticipant::maybe_issue_requests(const Timestamp ts) {
+	if(state_ != TxParticipantState::OPEN) {
+		LOG_DEBUG << "[TxParticipant::maybe_issue_requests] available only in OPEN state";
+		return;
+	}
+
+	for(; next_put_ < put_status_.size(); next_put_++) {
+		put_status_[next_put_].status = RequestState::Status::REQUEST_START;
+
+		auto msg = msg::CreateMsgPut(client_tx_actor_id_, coordinator_actor_id_, txid_,
+									 put_status_[next_put_].key, put_status_[next_put_].value);
+		retrier_->schedule(ts, msg);
+		put_request_[msg.msg_id] = next_put_;
+	}
+}
+
+void TxParticipant::process_replies_start_sent(const Messages &msgs) {
+	Timestamp ts{UNDEFINED_TS};
+
+	for(const auto& msg : msgs) {
+		switch (msg.type) {
+			case msg::MessageType::MSG_START_ACK:
+				ts = msg.payload.get<msg::MsgAckStartPayload>().read_ts;
+				break;
+			default:
+				throw std::logic_error("process_replies_start_sent work only with MSG_START_ACK");
+		}
+	}
+
+	assert(read_ts_ == UNDEFINED_TS);
+	assert(ts != UNDEFINED_TS);
+
+	read_ts_ = ts;
+
+	constexpr auto next_state = TxParticipantState::OPEN;
+
+	LOG_DEBUG << "[TxParticipant::process_replies_start_sent]"
+		<< " setup read_ts=" << read_ts_
+		<< " and change state from " << state_
+		<< " to " << next_state;
+
+	state_ = next_state;
+}
+
+void TxParticipant::process_replies_open(const Messages& msgs) {
+	for(const auto& msg : msgs) {
+		LOG_DEBUG << "[TxParticipant::process_replies_open]" << msg;
+
+		switch (msg.type) {
+			case msg::MessageType::MSG_PUT_REPLY: {
+				const auto original_msg_id = msg.payload.get<msg::MsgPutReplyPayload>().msg_id;
+				if (put_request_.contains(original_msg_id)) {
+					const auto old_next_put = put_request_[original_msg_id];
+					if (put_status_[old_next_put].status == RequestState::Status::REQUEST_START) {
+						put_status_[old_next_put].status = RequestState::Status::REQUEST_COMPLETED;
+						completed_puts_++;
+
+						LOG_DEBUG << "[TxParticipant::process_replies_open]"
+							<< " old_next_put=" << old_next_put << " set status REQUEST_COMPLETED"
+							<< ", completed_puts=" << completed_puts_;
+					}
+				} else {
+					// log error
+				}
+				break;
+			}
+			default:
+				throw std::logic_error("process_replies_open work only with MSG_PUT_REPLY");
+		}
+	}
+}
+
+void TxParticipant::issue_put(Key key, Value value) {
+	put_status_.push_back(RequestState{
+		.status=RequestState::Status::REQUEST_NOT_STARTED,
+		.key=key,
+		.value=value
+	});
+}
+
 } // namespace sdb::tx::client

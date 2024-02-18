@@ -2,7 +2,7 @@
 // Created by focus on 2/15/24.
 //
 
-#include "client_tx_spec.h"
+#include "tx_spec.h"
 
 namespace sdb::tx::client {
 
@@ -12,7 +12,7 @@ std::string CheckNone(const Timestamp ts) {
 	return std::to_string(ts);
 }
 
-std::ostream& operator<<(std::ostream& stream, const ClientTxSpec& spec) {
+std::ostream& operator<<(std::ostream& stream, const TxSpec& spec) {
 	stream << "[ClientTxSpec]"
 		<< "[earliest_start_ts=" << CheckNone(spec.earliest_start_ts) << "]"
 		<< "[earliest_commit_ts=" << CheckNone(spec.earliest_commit_ts) << "]";

@@ -39,6 +39,13 @@ private:
 
 	void report_unexpected_msg(msg::Message msg);
 	void process_msg_not_started(Timestamp ts, msg::Message msg);
+	void process_msg_open(Timestamp ts, msg::Message msg);
+
+	struct DataPut {
+		Key key;
+		Value value;
+	};
+	std::vector<DataPut> puts_;
 };
 
 

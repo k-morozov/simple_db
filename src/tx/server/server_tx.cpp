@@ -49,6 +49,7 @@ void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* outgoing_msgs) 
 				process_msg_not_started(ts, msg);
 				break;
 			case ServerTXState::OPEN:
+				process_msg_open(ts, msg);
 				break;
 		}
 	}
@@ -85,6 +86,30 @@ void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message ms
 
 		default:
 			report_unexpected_msg(msg);
+	}
+}
+
+void ServerTX::process_msg_open(Timestamp ts, msg::Message msg) {
+	LOG_DEBUG << "[ServerTX::process_msg_open] called with ts=" << ts
+			  << " msg=" << msg;
+
+	switch (msg.type) {
+		case msg::MessageType::MSG_PUT: {
+			const auto key = msg.payload.get<msg::MsgPutPayload>().key;
+			const auto value = msg.payload.get<msg::MsgPutPayload>().value;
+
+			puts_.push_back({key, value});
+
+			auto msg_put_reply = msg::CreateMsgPutReply(msg.destination, msg.source, txid_, msg.msg_id);
+
+			LOG_DEBUG << "[ServerTX::process_msg_open] send put reply: " << msg_put_reply;
+
+			retrier_->send_once(ts, msg_put_reply);
+
+			break;
+		}
+		default:
+			break;
 	}
 }
 
