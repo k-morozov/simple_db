@@ -35,7 +35,7 @@ bool LightCmpMsg(const Message& lhs, const Message& rhs) {
 	return true;
 }
 
-class RuntimeTxFixture : public ::testing::Test {
+class TxStateFixture : public ::testing::Test {
 public:
 	void SetUp() override {
 		runtime = std::make_shared<Runtime>();
@@ -78,7 +78,7 @@ public:
 	};
 };
 
-TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
+TEST_F(TxStateFixture, SimpleSendMsgStartFromActor) {
 	const auto test_client_actor_id = builder();
 	auto proxy_client = ProxyRuntime(runtime, test_client_actor_id);
 	common::TestClient client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
@@ -140,7 +140,7 @@ TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromActor) {
 	runtime->run();
 }
 
-TEST_F(RuntimeTxFixture, SimpleSendMsgStartFromSomeActors) {
+TEST_F(TxStateFixture, SimpleSendMsgStartFromSomeActors) {
 	auto actor1 = common::FakeActor(builder);
 	auto actor2 = common::FakeActor(builder);
 

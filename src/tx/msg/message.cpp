@@ -29,6 +29,9 @@ std::ostream& operator<<(std::ostream& stream, const MessageType type) {
 		case MessageType::MSG_PUT_REPLY:
 			stream << "MSG_PUT_REPLY";
 			break;
+		case MessageType::MSG_COMMIT:
+			stream << "MSG_COMMIT";
+			break;
 	}
 	return stream;
 }
@@ -141,6 +144,23 @@ Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID 
 	MsgPutReplyPayload payload{
 			.txid=txid,
 			.msg_id=msg_id
+	};
+
+	msg.payload.payload = payload;
+
+	return msg;
+}
+
+Message CreateMsgCommit(ActorID source, ActorID destination, TxID txid) {
+	Message msg;
+	msg.type = MessageType::MSG_COMMIT;
+	msg.source = source;
+	msg.destination = destination;
+
+	msg.msg_id = Generator::get_next_msg_id();
+
+	MsgCommitPayload payload{
+			.txid=txid
 	};
 
 	msg.payload.payload = payload;

@@ -20,7 +20,8 @@ enum class MessageType: uint8_t {
 	MSG_START,
 	MSG_START_ACK,
 	MSG_PUT,
-	MSG_PUT_REPLY
+	MSG_PUT_REPLY,
+	MSG_COMMIT
 };
 
 std::ostream& operator<<(std::ostream& stream, MessageType type);
@@ -48,5 +49,7 @@ Message CreateMsgStartAck(ActorID source, ActorID destination, TxID txid, Timest
 
 Message CreateMsgPut(ActorID source, ActorID destination, TxID txid, Key key, Value value);
 Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID msg_id);
+
+Message CreateMsgCommit(ActorID source, ActorID destination, TxID txid);
 
 } // namespace sdb::tx::msg

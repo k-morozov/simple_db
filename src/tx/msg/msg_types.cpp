@@ -55,4 +55,15 @@ std::ostream& operator<<(std::ostream& stream, const MsgPutReplyPayload& payload
 	return stream;
 }
 
+bool operator==(const MsgCommitPayload& lhs, const MsgCommitPayload& rhs) {
+	return std::make_tuple(lhs.txid)
+		   ==
+		   std::make_tuple(rhs.txid);
+}
+
+std::ostream& operator<<(std::ostream& stream, const MsgCommitPayload& payload) {
+	stream << "MsgCommitPayload: txid=" << payload.txid;
+	return stream;
+}
+
 } // namespace sdb::tx::msg

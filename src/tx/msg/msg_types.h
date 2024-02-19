@@ -44,4 +44,12 @@ struct MsgPutReplyPayload {
 bool operator==(const MsgPutReplyPayload& lhs, const MsgPutReplyPayload& rhs);
 std::ostream& operator<<(std::ostream& stream, const MsgPutReplyPayload& payload);
 
+struct MsgCommitPayload {
+	TxID txid;
+	// Participants except the coordinator.
+};
+
+bool operator==(const MsgCommitPayload& lhs, const MsgCommitPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgCommitPayload& payload);
+
 } // namespace sdb::tx::msg

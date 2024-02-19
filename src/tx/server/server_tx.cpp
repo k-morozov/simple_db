@@ -108,6 +108,9 @@ void ServerTX::process_msg_open(Timestamp ts, msg::Message msg) {
 
 			break;
 		}
+		case msg::MessageType::MSG_COMMIT:
+			LOG_DEBUG << "[ServerTX::process_msg_open] got msg: " << msg;
+			break;
 		default:
 			break;
 	}

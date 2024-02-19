@@ -49,8 +49,9 @@ void progress_state(ClientTXState* state) {
 			LOG_DEBUG << "[ClientTx::tick]"
 					  << " change state form OPEN to COMMIT_SENT";
 			*state = ClientTXState::COMMIT_SENT;
+			break;
 		case ClientTXState::COMMIT_SENT:
-			throw std::logic_error("have not implemented yet.");
+			throw std::logic_error("progress_state: have not implemented yet.");
 	}
 }
 
@@ -120,6 +121,7 @@ void ClientTx::tick(const Timestamp ts,
 				configure_read_ts();
 				progress_state(&state_);
 			}
+			break;
 		}
 		case ClientTXState::OPEN: {
 			process_replies_open(external_msgs);
@@ -147,12 +149,18 @@ void ClientTx::tick(const Timestamp ts,
 					<< spec_.earliest_commit_ts;
 
 				if (spec_.action == TxSpec::Action::COMMIT) {
-					LOG_DEBUG << "[ClientTransaction::tick]" << "[tx " << txid_ << "] send COMMIT";
+					LOG_DEBUG << "[ClientTx::tick]" << "[tx " << txid_ << "] send COMMIT";
 					// create commit msgs for another participant except coordinator
 					// send msg
+					auto commit_msg = msg::CreateMsgCommit(actor_id_, coordinator_actor_id_, txid_);
+
+					retrier_->schedule(ts, commit_msg);
+
 					progress_state(&state_);
 				}
 			}
+
+			break;
 		}
 
 		case ClientTXState::COMMIT_SENT:
