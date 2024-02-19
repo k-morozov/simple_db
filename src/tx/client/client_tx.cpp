@@ -164,8 +164,7 @@ void ClientTx::tick(const Timestamp ts,
 		}
 
 		case ClientTXState::COMMIT_SENT:
-			break;
-//			throw std::logic_error("have not implemented yet.");
+			throw std::logic_error("COMMIT_SENT in client have not implemented yet.");
 	}
 
 	for(auto& [_, participant] : participants_) {

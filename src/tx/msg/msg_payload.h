@@ -17,7 +17,9 @@ struct MsgPayload final {
 		MsgAckStartPayload,
 		MsgPutPayload,
 		MsgPutReplyPayload,
-		MsgCommitPayload
+		MsgCommitPayload,
+		MsgCommitAckPayload,
+		MsgRolledBackByServerPayload
 	> payload;
 
 	template<class T>

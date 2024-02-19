@@ -52,4 +52,21 @@ struct MsgCommitPayload {
 bool operator==(const MsgCommitPayload& lhs, const MsgCommitPayload& rhs);
 std::ostream& operator<<(std::ostream& stream, const MsgCommitPayload& payload);
 
+struct MsgCommitAckPayload {
+	TxID txid;
+	Timestamp commit_ts;
+	// Participants except the coordinator.
+};
+
+bool operator==(const MsgCommitAckPayload& lhs, const MsgCommitAckPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgCommitAckPayload& payload);
+
+struct MsgRolledBackByServerPayload {
+	TxID txid;
+	TxID conflict_txid;
+};
+
+bool operator==(const MsgRolledBackByServerPayload& lhs, const MsgRolledBackByServerPayload& rhs);
+std::ostream& operator<<(std::ostream& stream, const MsgRolledBackByServerPayload& payload);
+
 } // namespace sdb::tx::msg

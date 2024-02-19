@@ -15,7 +15,9 @@ class Retrier;
 
 enum class ServerTXState {
 	NOT_STARTED,
-	OPEN
+	OPEN,
+	COMMITTED,
+	ROLLED_BACK_BY_SERVER
 };
 
 std::string to_string(ServerTXState state);

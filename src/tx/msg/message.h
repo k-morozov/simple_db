@@ -21,7 +21,9 @@ enum class MessageType: uint8_t {
 	MSG_START_ACK,
 	MSG_PUT,
 	MSG_PUT_REPLY,
-	MSG_COMMIT
+	MSG_COMMIT,
+	MSG_COMMIT_ACK,
+	MSG_ROLLED_BACK_BY_SERVER
 };
 
 std::ostream& operator<<(std::ostream& stream, MessageType type);
@@ -51,5 +53,7 @@ Message CreateMsgPut(ActorID source, ActorID destination, TxID txid, Key key, Va
 Message CreateMsgPutReply(ActorID source, ActorID destination, TxID txid, MsgID msg_id);
 
 Message CreateMsgCommit(ActorID source, ActorID destination, TxID txid);
+Message CreateMsgCommitAck(ActorID source, ActorID destination, TxID txid, Timestamp commit_ts);
+Message CreateMsgRolledBackByServer(ActorID source, ActorID destination, TxID txid, TxID conflict_txid);
 
 } // namespace sdb::tx::msg

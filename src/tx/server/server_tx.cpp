@@ -10,6 +10,7 @@
 #include <tx/msg/message.h>
 #include <tx/clock/clock.h>
 #include <tx/retrier/retrier.h>
+#include <tx/storage/storage.h>
 
 namespace sdb::tx {
 
@@ -23,6 +24,10 @@ std::string to_string(const ServerTXState state) {
 			return "NOT_STARTED";
 		case ServerTXState::OPEN:
 			return "OPEN";
+		case ServerTXState::COMMITTED:
+			return "COMMITTED";
+		case ServerTXState::ROLLED_BACK_BY_SERVER:
+			return "ROLLED_BACK_BY_SERVER";
 	}
 }
 
@@ -108,9 +113,48 @@ void ServerTX::process_msg_open(Timestamp ts, msg::Message msg) {
 
 			break;
 		}
-		case msg::MessageType::MSG_COMMIT:
-			LOG_DEBUG << "[ServerTX::process_msg_open] got msg: " << msg;
+		case msg::MessageType::MSG_COMMIT: {
+			commit_ts_ = ts;
+			LOG_DEBUG << "[ServerTX::process_msg_open][read_ts=" << read_ts_ << "] setup commit_ts=" << commit_ts_;
+
+			bool has_conflict = false;
+			TxID conflict_txid{UNDEFINED_TX_ID};
+
+			for (const auto& put:puts_) {
+				const auto* p = storage_->get_last(put.key);
+				if (!p)
+					continue;
+
+				const Timestamp old_key_ts = p->first;
+				LOG_DEBUG << "[ServerTX::process_msg_open] in storage key=" << put.key
+					<< " has last: value=" << p->second << " and ts=" << old_key_ts;
+
+				if (old_key_ts > read_ts_) {
+					has_conflict = true;
+					conflict_txid = p->second.txid;
+					break;
+				}
+			}
+
+			if (has_conflict) {
+				state_ = ServerTXState::ROLLED_BACK_BY_SERVER;
+				const auto msg_rolled_back = msg::CreateMsgRolledBackByServer(msg.destination, msg.source, txid_, conflict_txid);
+				LOG_DEBUG << "[ServerTX::process_msg_open] send " << msg_rolled_back;
+				retrier_->schedule(ts, msg_rolled_back);
+				break;
+			}
+
+			state_ = ServerTXState::COMMITTED;
+
+			for(const auto& put : puts_) {
+				storage_->apply(txid_, commit_ts_, put.key, put.value);
+			}
+
+			const auto msg_commit_ack = msg::CreateMsgCommitAck(msg.destination, msg.source, txid_, commit_ts_);
+			LOG_DEBUG << "[ServerTX::process_msg_open] send " << msg_commit_ack;
+			retrier_->schedule(ts, msg_commit_ack);
 			break;
+		}
 		default:
 			break;
 	}

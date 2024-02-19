@@ -66,4 +66,27 @@ std::ostream& operator<<(std::ostream& stream, const MsgCommitPayload& payload) 
 	return stream;
 }
 
+bool operator==(const MsgCommitAckPayload& lhs, const MsgCommitAckPayload& rhs) {
+	return std::make_tuple(lhs.txid, lhs.commit_ts)
+		   ==
+		   std::make_tuple(rhs.txid, rhs.commit_ts);
+}
+
+std::ostream& operator<<(std::ostream& stream, const MsgCommitAckPayload& payload) {
+	stream << "MsgCommitAckPayload: txid=" << payload.txid
+		   << ", commit_ts=" << payload.commit_ts;
+	return stream;
+}
+
+bool operator==(const MsgRolledBackByServerPayload& lhs, const MsgRolledBackByServerPayload& rhs) {
+	return std::make_tuple(lhs.txid, lhs.conflict_txid)
+		   ==
+		   std::make_tuple(rhs.txid, rhs.conflict_txid);
+}
+std::ostream& operator<<(std::ostream& stream, const MsgRolledBackByServerPayload& payload) {
+	stream << "MsgRolledBackByServerPayload: txid=" << payload.txid
+		   << ", conflict_txid=" << payload.conflict_txid;
+	return stream;
+}
+
 } // namespace sdb::tx::msg
