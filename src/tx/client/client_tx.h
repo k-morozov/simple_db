@@ -26,6 +26,8 @@ enum class ClientTXState {
 	OPEN,
 
 	COMMIT_SENT,
+
+	COMMITTED,
 };
 
 std::ostream& operator<<(std::ostream& stream, const ClientTXState& state);
@@ -67,6 +69,7 @@ private:
 
 	void process_replies_start_sent(const Messages& msgs);
 	void process_replies_open(const Messages& msgs);
+	void process_replies_commit_sent(const Messages& msgs);
 
 	size_t completed_requests();
 };

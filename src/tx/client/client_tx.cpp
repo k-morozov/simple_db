@@ -27,6 +27,9 @@ std::ostream& operator<<(std::ostream& stream, const ClientTXState& state) {
 		case ClientTXState::COMMIT_SENT:
 			stream << "COMMIT_SENT";
 			break;
+		case ClientTXState::COMMITTED:
+			stream << "COMMITTED";
+			break;
 	}
 	return stream;
 }
@@ -37,21 +40,28 @@ void progress_state(ClientTXState* state) {
 	switch (*state) {
 		case ClientTXState::NOT_STARTED:
 			LOG_DEBUG << "[ClientTx::tick]"
-					  << " change state form NOT_STARTED to START_SENT";
+					  << " change state from NOT_STARTED to START_SENT";
 			*state = ClientTXState::START_SENT;
 			break;
 		case ClientTXState::START_SENT:
 			LOG_DEBUG << "[ClientTx::tick]"
-					  << " change state form START_SENT to OPEN";
+					  << " change state from START_SENT to OPEN";
 			*state = ClientTXState::OPEN;
 			break;
 		case ClientTXState::OPEN:
 			LOG_DEBUG << "[ClientTx::tick]"
-					  << " change state form OPEN to COMMIT_SENT";
+					  << " change state from OPEN to COMMIT_SENT";
 			*state = ClientTXState::COMMIT_SENT;
 			break;
 		case ClientTXState::COMMIT_SENT:
-			throw std::logic_error("progress_state: have not implemented yet.");
+			LOG_DEBUG << "[ClientTx::tick]"
+					  << " change state from COMMIT_SENT to COMMITTED";
+			*state = ClientTXState::COMMITTED;
+			break;
+		case ClientTXState::COMMITTED:
+			// @TODO think
+			LOG_DEBUG << "[ClientTx::tick] current state is COMMITTED already. skip.";
+			break;
 	}
 }
 
@@ -164,7 +174,8 @@ void ClientTx::tick(const Timestamp ts,
 		}
 
 		case ClientTXState::COMMIT_SENT:
-			throw std::logic_error("COMMIT_SENT in client have not implemented yet.");
+			process_replies_commit_sent(msgs);
+			break;
 	}
 
 	for(auto& [_, participant] : participants_) {
@@ -198,6 +209,24 @@ void ClientTx::process_replies_start_sent(const Messages& msgs) {
 
 void ClientTx::process_replies_open(const Messages& msgs) {
 	// handled MSG_ROLLED_BACK_BY_SERVER
+}
+
+void ClientTx::process_replies_commit_sent(const Messages& msgs) {
+	for(const auto& msg : msgs) {
+		switch (msg.type) {
+			case msg::MessageType::MSG_ROLLED_BACK_BY_SERVER:
+				throw std::logic_error("process_replies_commit_sent: MSG_ROLLED_BACK_BY_SERVER has not implemented yet.");
+			case msg::MessageType::MSG_COMMIT_ACK: {
+				LOG_DEBUG << "[ClientTx::process_replies_commit_sent] got " << msg;
+				commit_ts_ = msg.payload.get<msg::MsgCommitAckPayload>().commit_ts;
+
+				progress_state(&state_);
+				break;
+			}
+			default:
+				throw std::logic_error("process_replies_commit_sent: broken case.");
+		}
+	}
 }
 
 size_t ClientTx::completed_requests() {
