@@ -26,6 +26,8 @@ enum class ClientTXState {
 	OPEN,
 
 	COMMIT_SENT,
+
+	COMMITTED,
 };
 
 std::ostream& operator<<(std::ostream& stream, const ClientTXState& state);
@@ -35,12 +37,29 @@ class ClientTx final {
 public:
 	friend std::ostream& operator<<(std::ostream& stream, const ClientTx& self);
 
+	struct ExportResult {
+		using KeyValue = std::pair<Key, Value>;
+
+		TxID txid;
+
+		Timestamp read_ts;
+		Timestamp commit_ts;
+
+		std::vector<KeyValue> gets;
+		std::vector<KeyValue> puts;
+	};
+
 	ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discovery, Retrier* retrier);
 
 	void tick(Timestamp ts, const Messages& msgs, Messages* msg_out);
 
 	ActorID get_actor_id() const noexcept { return actor_id_; }
 	TxID get_tx_id() const noexcept { return txid_;}
+
+	ClientTXState get_state() const { return state_; }
+
+	ExportResult export_results() const;
+
 private:
 	const ActorID actor_id_;
 	const TxSpec spec_;
@@ -67,6 +86,7 @@ private:
 
 	void process_replies_start_sent(const Messages& msgs);
 	void process_replies_open(const Messages& msgs);
+	void process_replies_commit_sent(const Messages& msgs);
 
 	size_t completed_requests();
 };

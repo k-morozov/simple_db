@@ -37,7 +37,7 @@ private:
 	std::unordered_map<ActorID, Messages> destination_actor_messages_;
 	std::priority_queue<msg::SentMessage, std::vector<msg::SentMessage>, msg::DeliveredLast> messages_queue_;
 
-	void clear_destination_actor_messages_();
+	void clear_destination_actor_messages();
 	void fill_destination_actor_messages();
 	void send_to_actors();
 };

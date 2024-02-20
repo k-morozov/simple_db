@@ -6,6 +6,7 @@
 
 #include <unordered_map>
 
+#include <ostream>
 #include <tx/actor.h>
 #include <tx/runtime/proxy_runtime.h>
 #include <tx/retrier/retrier.h>
@@ -14,7 +15,7 @@
 
 namespace sdb::tx {
 
-class Server final: public IActor {
+class Server: public IActor {
 public:
 	using Transactions = std::unordered_map<TxID, ServerTX>;
 

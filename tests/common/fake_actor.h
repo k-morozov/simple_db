@@ -5,6 +5,7 @@
 #pragma once
 
 #include <tx/client/client.h>
+#include <tx/server/server.h>
 #include <tx/actor.h>
 #include <tx/msg/message.h>
 
@@ -63,6 +64,18 @@ public:
 		client::Client::send_on_tick(clock, std::move(msgs));
 	}
 
+	sdb::tx::Messages total;
+};
+
+class TestServer: public Server {
+public:
+	TestServer(ActorID actor_id, const KeyIntervals& key_intervals, ProxyRuntime runtime)
+		: Server(actor_id, key_intervals, runtime) {};
+
+	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
+		std::copy(std::begin(msgs), std::end(msgs), std::back_inserter(total));
+		Server::send_on_tick(clock, std::move(msgs));
+	}
 	sdb::tx::Messages total;
 };
 

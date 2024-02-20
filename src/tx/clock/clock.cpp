@@ -4,6 +4,8 @@
 
 #include "clock.h"
 
+#include <common/log/log.h>
+
 namespace sdb::tx {
 
 
@@ -12,6 +14,7 @@ Timestamp Clock::current() const {
 }
 
 Timestamp Clock::next() {
+	LOG_DEBUG << "[Clock::next] up ts=" << tm_+1;
 	return ++tm_;
 }
 

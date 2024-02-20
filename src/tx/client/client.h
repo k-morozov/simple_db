@@ -24,6 +24,8 @@ public:
 		   ProxyRuntime proxy);
 	~Client() override = default;
 
+	const std::unique_ptr<ClientTx>& get_tx(size_t index) const;
+
 	ActorID get_actor_id() const override;
 
 	void send_on_tick(Clock &clock, Messages &&msgs) override;

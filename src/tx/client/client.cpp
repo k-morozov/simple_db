@@ -33,6 +33,10 @@ Client::Client(ActorID actor_id, const std::vector<TxSpec>& tx_specs, const Disc
 	LOG_SELF_DEBUG  << "created.";
 }
 
+const std::unique_ptr<ClientTx> &Client::get_tx(const size_t index) const {
+	return transactions_[index];
+}
+
 ActorID Client::get_actor_id() const {
 	return actor_id_;
 }
@@ -42,7 +46,7 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 
 	for(const auto& msg : msgs) {
 		const auto txid = msg::get_txid_from_msg_payload(msg);
-		LOG_SELF_DEBUG << "msg_id=" << msg.msg_id
+		LOG_DEBUG << "[Client::send_on_tick] msg_id=" << msg.msg_id
 			<< " has txid=" << txid;
 
 		if (txid != UNDEFINED_TX_ID) {
@@ -54,6 +58,7 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 
 	for(const auto& tx : transactions_) {
 		const auto txid = tx->get_tx_id();
+		LOG_DEBUG << "[Client::send_on_tick][txid=" << txid << "] process.";
 		Messages  tx_msgs;
 
 		if (txid != UNDEFINED_TX_ID) {

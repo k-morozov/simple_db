@@ -50,11 +50,13 @@ void TxParticipant::start(const Timestamp ts) {
 	auto create_msg = msg::CreateMsgStart(client_tx_actor_id_, coordinator_actor_id_);
 	txid_ = msg::get_txid_from_msg_payload(create_msg);
 
+	LOG_DEBUG << "[TxParticipant::start] create and send " << create_msg;
+
 	assert(txid_ != UNDEFINED_TX_ID);
 
 	retrier_->schedule(ts, create_msg);
 
-	LOG_SELF_DEBUG << "change state to " << TxParticipantState::START_SENT;
+	LOG_DEBUG << "[TxParticipant::start] change state to " << TxParticipantState::START_SENT;
 
 	state_ = TxParticipantState::START_SENT;
 }
@@ -102,6 +104,7 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 		switch (msg.type) {
 			case msg::MessageType::MSG_START_ACK:
 				ts = msg.payload.get<msg::MsgAckStartPayload>().read_ts;
+				assert(ts != UNDEFINED_TS);
 				break;
 			default:
 				throw std::logic_error("process_replies_start_sent work only with MSG_START_ACK");
@@ -109,7 +112,11 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 	}
 
 	assert(read_ts_ == UNDEFINED_TS);
-	assert(ts != UNDEFINED_TS);
+
+	if (ts == UNDEFINED_TS) {
+		LOG_DEBUG << "[TxParticipant::process_replies_start_sent] undefined ts. skip.";
+		return;
+	}
 
 	read_ts_ = ts;
 
@@ -141,12 +148,12 @@ void TxParticipant::process_replies_open(const Messages& msgs) {
 							<< ", completed_puts=" << completed_puts_;
 					}
 				} else {
-					// log error
+					LOG_ERROR << "[TxParticipant::process_replies_open] not found original_msg_id in put_request";
 				}
 				break;
 			}
 			default:
-				throw std::logic_error("process_replies_open work only with MSG_PUT_REPLY");
+				LOG_DEBUG << "[TxParticipant::process_replies_open] fix a bug: " << msg;
 		}
 	}
 }
@@ -157,6 +164,15 @@ void TxParticipant::issue_put(Key key, Value value) {
 		.key=key,
 		.value=value
 	});
+}
+
+void TxParticipant::export_results(std::vector<std::pair<Key, Value>>* puts) const {
+	for(const auto& status:put_status_) {
+		if (status.status != RequestState::Status::REQUEST_COMPLETED) {
+			continue;
+		}
+		puts->push_back(std::make_pair(status.key, status.value));
+	}
 }
 
 } // namespace sdb::tx::client
