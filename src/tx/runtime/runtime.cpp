@@ -28,10 +28,11 @@ void Runtime::send(msg::Message msg) {
 	const auto current_clock = clock_.current();
 	auto sent_msg = msg::SentMessage{
 			.send_timestamp=timestamp_,
-			.delivery_timestamp=gen_.generate(current_clock, current_clock+1),
+			.delivery_timestamp=current_clock, // gen_.generate(current_clock, current_clock+1),
 			.msg=msg
 	};
-	LOG_DEBUG << "[Runtime::send] " << sent_msg << " add to messages_queue.";
+	LOG_DEBUG << "[Runtime::send][ts=" << current_clock <<"] "
+		<< sent_msg << " add to messages_queue.";
 
 	messages_queue_.push(sent_msg);
 }
@@ -39,7 +40,7 @@ void Runtime::send(msg::Message msg) {
 void Runtime::run(const int ticks) {
 	for(int i=0; i<ticks; i++) {
 		LOG_DEBUG << "[Runtime::run] start tick=" << i;
-		clear_destination_actor_messages_();
+		clear_destination_actor_messages();
 
 		timestamp_ = clock_.current();
 		LOG_DEBUG << "[Runtime::run] set ts=" << timestamp_;
@@ -53,7 +54,7 @@ void Runtime::run(const int ticks) {
 	}
 }
 
-void Runtime::clear_destination_actor_messages_() {
+void Runtime::clear_destination_actor_messages() {
 	for(auto& [actorID, messages] : destination_actor_messages_) {
 		if (!messages.empty()) {
 			LOG_DEBUG << "Clear messages for actor_id=" << actorID;

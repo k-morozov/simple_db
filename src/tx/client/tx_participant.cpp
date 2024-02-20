@@ -104,6 +104,7 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 		switch (msg.type) {
 			case msg::MessageType::MSG_START_ACK:
 				ts = msg.payload.get<msg::MsgAckStartPayload>().read_ts;
+				assert(ts != UNDEFINED_TS);
 				break;
 			default:
 				throw std::logic_error("process_replies_start_sent work only with MSG_START_ACK");

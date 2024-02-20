@@ -23,6 +23,7 @@ ActorID Server::get_actor_id() const {
 }
 
 void Server::send_on_tick(Clock& clock, Messages &&income_msgs) {
+	LOG_DEBUG << "[Server::send_on_tick] call.";
 	std::unordered_map<TxID, Messages> messages_per_tx;
 
 	for (const auto& msg : income_msgs) {

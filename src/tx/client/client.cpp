@@ -58,6 +58,7 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 
 	for(const auto& tx : transactions_) {
 		const auto txid = tx->get_tx_id();
+		LOG_DEBUG << "[Client::send_on_tick][txid=" << txid << "] process.";
 		Messages  tx_msgs;
 
 		if (txid != UNDEFINED_TX_ID) {
