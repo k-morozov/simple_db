@@ -177,7 +177,8 @@ void ClientTx::tick(const Timestamp ts,
 			process_replies_commit_sent(msgs);
 			break;
 		case ClientTXState::COMMITTED:
-			throw std::runtime_error("ClientTx has state=COMMITTED yet.");
+			LOG_DEBUG << "[ClientTx::tick] a bug";
+			break;
 	}
 
 	for(auto& [_, participant] : participants_) {

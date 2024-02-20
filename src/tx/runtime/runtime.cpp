@@ -84,10 +84,9 @@ void Runtime::send_to_actors() {
 	for(auto actor : actors_) {
 		const auto destination = actor->get_actor_id();
 		auto msgs = std::move(destination_actor_messages_[destination]);
-		if (!msgs.empty()) {
-			LOG_DEBUG << "[Runtime::send_to_actors] Send " << msgs.size() << " msgs to actor_id= " << destination;
-			actor->send_on_tick(clock_, std::move(msgs));
-		}
+
+		LOG_DEBUG << "[Runtime::send_to_actors] Send " << msgs.size() << " msgs to actor_id= " << destination;
+		actor->send_on_tick(clock_, std::move(msgs));
 	}
 }
 

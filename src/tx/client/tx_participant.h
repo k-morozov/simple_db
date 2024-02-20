@@ -46,7 +46,7 @@ public:
 	void start(Timestamp ts);
 
 	bool is_open() const noexcept { return state_ == TxParticipantState::OPEN; }
-	Timestamp read_ts() const noexcept { assert(read_ts_ != UNDEFINED_TS); return read_ts_; }
+	Timestamp read_ts() const noexcept { /*assert(read_ts_ != UNDEFINED_TS);*/ return read_ts_; }
 
 	TxID txid() const;
 

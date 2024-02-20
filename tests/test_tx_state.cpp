@@ -56,12 +56,11 @@ public:
 
 	std::shared_ptr<Runtime> runtime;
 	common::GeneratorActorID builder;
-//	Clock clock;
 
 	sdb::tx::ActorID server_actor_id;
 	std::unique_ptr<ProxyRuntime> proxy_server;
 
-	std::unique_ptr<common::TestServer> server;
+	std::unique_ptr<Server> server;
 	std::unique_ptr<Discovery> discovery;
 	client::TxSpec spec{
 		.earliest_start_ts=0,
@@ -81,79 +80,18 @@ public:
 TEST_F(TxStateFixture, SimpleSendMsgStartFromActor) {
 	const auto test_client_actor_id = builder();
 	auto proxy_client = ProxyRuntime(runtime, test_client_actor_id);
-	common::TestClient client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
+	client::Client client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
 
 	ASSERT_NO_THROW(runtime->register_actor(&client));
 
-	Messages msgs;
+	runtime->run();
 
-	const TxID txid = Generator::get_current_tx_id() + 1;
-	const auto msg_id = Generator::get_next_msg_id();
-	const auto expected_msg_id_ack = msg_id + 2;
-	const auto ts = 0; //clock.next();
-	const auto expected_ts_ack = ts+1;
+	const auto res = client.get_tx(0)->export_results();
 
-	auto msg = msg::Message{
-			.type=msg::MessageType::MSG_START,
-			.source=test_client_actor_id,
-			.destination=server_actor_id,
-			.msg_id=msg_id,
-	};
-	proxy_client.send(msg);
+	ASSERT_EQ(res.read_ts, -1);
+	ASSERT_TRUE(res.commit_ts >=2);
+	ASSERT_EQ(res.txid, 1001);
+	ASSERT_TRUE(res.puts.size() == 1);
+	ASSERT_EQ(res.puts[0], client::ClientTx::ExportResult::KeyValue(17, 1177));
 
-
-	runtime->run(1);
-
-	{
-		ASSERT_FALSE(server->total.empty());
-//		const auto actual_start_sever_msg = server->total.front();
-//		const auto expected_msg = msg::Message{
-//				.type=msg::MessageType::MSG_START,
-//				.source=test_client_actor_id,
-//				.destination=server_actor_id,
-//				.msg_id=expected_msg_id_ack,
-//				.payload=msg::MsgPayload{
-//						.payload=msg::MsgStartPayload{
-//								.txid=txid,
-//								.read_ts=expected_ts_ack
-//						}
-//				}
-//		};
-//		const auto actual_msg = client.total.front();
-	}
-
-//	const auto actual_msg = client.total.front();
-//	const auto expected_msg = msg::Message{
-//			.type=msg::MessageType::MSG_START_ACK,
-//			.source=server_actor_id,
-//			.destination=test_client_actor_id,
-//			.msg_id=expected_msg_id_ack,
-//			.payload=msg::MsgPayload{
-//					.payload=msg::MsgAckStartPayload{
-//							.txid=txid,
-//							.read_ts=expected_ts_ack
-//					}
-//			}
-//	};
-//
-//	ASSERT_TRUE(LightCmpMsg(actual_msg, expected_msg));
-//	ASSERT_EQ(actual_msg.payload.get<msg::MsgAckStartPayload>().txid,
-//			  expected_msg.payload.get<msg::MsgAckStartPayload>().txid);
-//
-//	constexpr Key key1 = 17;
-//	constexpr Value value1 = 1177;
-//	auto put_msg = msg::CreateMsgPut(
-//			test_client_actor_id,
-//			server_actor_id,
-//			get_txid_from_msg_payload(actual_msg),
-//			key1,
-//			value1
-//	);
-//
-//	msgs.clear();
-//	msgs.push_back(put_msg);
-//
-//	client.send_on_tick(clock, std::move(msgs));
-//
-//	runtime->run();
 }

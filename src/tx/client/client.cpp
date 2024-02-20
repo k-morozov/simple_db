@@ -33,6 +33,10 @@ Client::Client(ActorID actor_id, const std::vector<TxSpec>& tx_specs, const Disc
 	LOG_SELF_DEBUG  << "created.";
 }
 
+const std::unique_ptr<ClientTx> &Client::get_tx(const size_t index) const {
+	return transactions_[index];
+}
+
 ActorID Client::get_actor_id() const {
 	return actor_id_;
 }
