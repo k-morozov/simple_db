@@ -42,7 +42,7 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 
 	for(const auto& msg : msgs) {
 		const auto txid = msg::get_txid_from_msg_payload(msg);
-		LOG_SELF_DEBUG << "msg_id=" << msg.msg_id
+		LOG_DEBUG << "[Client::send_on_tick] msg_id=" << msg.msg_id
 			<< " has txid=" << txid;
 
 		if (txid != UNDEFINED_TX_ID) {

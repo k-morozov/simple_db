@@ -67,9 +67,9 @@ void progress_state(ClientTXState* state) {
 
 std::ostream& operator<<(std::ostream& stream, const ClientTx& self) {
 	stream << "[ClientTx]"
-		   << "[actor_id_=" << self.actor_id_ << "]"
+		   << "[actor_id=" << self.actor_id_ << "]"
 		   << self.spec_
-		   << "[state_=" << self.state_ << "]"
+		   << "[state=" << self.state_ << "]"
 		   << "[coordinator=" << self.coordinator_actor_id_ << "]";
 
 	return stream;
@@ -116,7 +116,7 @@ void ClientTx::tick(const Timestamp ts,
 			// we started work with tx not before earliest_start_ts in tx spec.
 			if (ts >= spec_.earliest_start_ts) {
 				LOG_DEBUG << "[ClientTx::tick] ts=" << ts << " is greater/equal than earliest_start_ts=" << spec_.earliest_start_ts
-					<< ", configure coordinator.";
+					<< ", start configure coordinator.";
 
 				configure_coordinator(ts);
 				progress_state(&state_);
@@ -176,6 +176,8 @@ void ClientTx::tick(const Timestamp ts,
 		case ClientTXState::COMMIT_SENT:
 			process_replies_commit_sent(msgs);
 			break;
+		case ClientTXState::COMMITTED:
+			throw std::runtime_error("ClientTx has state=COMMITTED yet.");
 	}
 
 	for(auto& [_, participant] : participants_) {
@@ -187,7 +189,7 @@ void ClientTx::tick(const Timestamp ts,
 
 void ClientTx::configure_coordinator(const Timestamp ts) {
 	coordinator_actor_id_ = discovery_->get_random();
-	LOG_DEBUG << "[ClientTx::tick] setup coordinator=" << coordinator_actor_id_;
+	LOG_DEBUG << "[ClientTx::configure_coordinator] set coordinator_actor_id=" << coordinator_actor_id_;
 
 	participants_[coordinator_actor_id_] = std::make_unique<TxParticipant>(
 			get_actor_id(), coordinator_actor_id_, retrier_);
@@ -195,11 +197,13 @@ void ClientTx::configure_coordinator(const Timestamp ts) {
 	participants_[coordinator_actor_id_]->start(ts);
 
 	txid_ = participants_[coordinator_actor_id_]->txid();
+
+	LOG_DEBUG << "[ClientTx::configure_coordinator] finished for txid=" << txid_;
 }
 
 void ClientTx::configure_read_ts() {
 	read_ts_ = participants_[coordinator_actor_id_]->read_ts();
-	LOG_DEBUG << "[ClientTx::tick][state=" << state_ << "]"
+	LOG_DEBUG << "[ClientTx::configure_read_ts][state=" << state_ << "]"
 			  << " setup read_ts=" << read_ts_;
 }
 

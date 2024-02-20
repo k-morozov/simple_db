@@ -46,8 +46,8 @@ std::ostream& operator<<(std::ostream& stream, const Message& msg) {
 	stream << "message "
 		   	<< "[type=" << msg.type << "]"
 		   	<< "[msg_id=" << msg.msg_id << "]"
-		   	<< "[source " << msg.source << "]"
-		   	<< "[destination " << msg.destination << "]"
+		   	<< "[source=" << msg.source << "]"
+		   	<< "[destination=" << msg.destination << "]"
 			<< " with payload: " << msg.payload;
 	return stream;
 }

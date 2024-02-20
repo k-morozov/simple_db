@@ -7,6 +7,7 @@
 #include <cassert>
 
 #include <tx/msg/message.h>
+#include <common/log/log.h>
 
 namespace sdb::tx {
 
@@ -22,6 +23,7 @@ Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
 
 void Retrier::get_ready(const Timestamp ts,
 						Messages* messages) {
+	LOG_DEBUG << "[Retrier::get_ready] call";
 	assert(messages);
 	messages->reserve(messages->size() + outgoing_.size());
 

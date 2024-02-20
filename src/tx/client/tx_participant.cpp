@@ -50,11 +50,13 @@ void TxParticipant::start(const Timestamp ts) {
 	auto create_msg = msg::CreateMsgStart(client_tx_actor_id_, coordinator_actor_id_);
 	txid_ = msg::get_txid_from_msg_payload(create_msg);
 
+	LOG_DEBUG << "[TxParticipant::start] create and send " << create_msg;
+
 	assert(txid_ != UNDEFINED_TX_ID);
 
 	retrier_->schedule(ts, create_msg);
 
-	LOG_SELF_DEBUG << "change state to " << TxParticipantState::START_SENT;
+	LOG_DEBUG << "[TxParticipant::start] change state to " << TxParticipantState::START_SENT;
 
 	state_ = TxParticipantState::START_SENT;
 }
