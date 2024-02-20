@@ -41,7 +41,7 @@ public:
 		runtime = std::make_shared<Runtime>();
 		server_actor_id = builder();
 		proxy_server = std::make_unique<ProxyRuntime>(runtime, server_actor_id);
-		server = std::make_unique<common::TestServer>(server_actor_id, KeyIntervals{}, *proxy_server);
+		server = std::make_unique<Server>(server_actor_id, KeyIntervals{}, *proxy_server);
 
 		ASSERT_NO_THROW(runtime->register_actor(server.get()));
 
@@ -84,11 +84,11 @@ TEST_F(TxStateFixture, SimpleSendMsgStartFromActor) {
 
 	ASSERT_NO_THROW(runtime->register_actor(&client));
 
-	runtime->run();
+	runtime->run(100);
 
 	const auto res = client.get_tx(0)->export_results();
 
-	ASSERT_EQ(res.read_ts, -1);
+	ASSERT_TRUE(res.read_ts >=1);
 	ASSERT_TRUE(res.commit_ts >=2);
 	ASSERT_EQ(res.txid, 1001);
 	ASSERT_TRUE(res.puts.size() == 1);

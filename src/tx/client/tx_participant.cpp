@@ -112,8 +112,10 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 
 	assert(read_ts_ == UNDEFINED_TS);
 
-	// @TODO change logic
-//	assert(ts != UNDEFINED_TS);
+	if (ts == UNDEFINED_TS) {
+		LOG_DEBUG << "[TxParticipant::process_replies_start_sent] undefined ts. skip.";
+		return;
+	}
 
 	read_ts_ = ts;
 
