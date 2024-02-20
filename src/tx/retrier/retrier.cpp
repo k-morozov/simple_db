@@ -21,9 +21,9 @@ Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
 	return -1;
 }
 
-void Retrier::get_ready(const Timestamp ts,
-						Messages* messages) {
-	LOG_DEBUG << "[Retrier::get_ready] call";
+void Retrier::get_outgoing_msgs(const Timestamp ts,
+								Messages* messages) {
+	LOG_DEBUG << "[Retrier::get_outgoing_msgs] call";
 	assert(messages);
 	messages->reserve(messages->size() + outgoing_.size());
 

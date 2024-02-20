@@ -56,10 +56,13 @@ void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* outgoing_msgs) 
 			case ServerTXState::OPEN:
 				process_msg_open(ts, msg);
 				break;
+			case ServerTXState::COMMITTED:
+			case ServerTXState::ROLLED_BACK_BY_SERVER:
+				throw std::runtime_error("server state has broken switch");
 		}
 	}
 
-	retrier_->get_ready(ts, outgoing_msgs);
+	retrier_->get_outgoing_msgs(ts, outgoing_msgs);
 }
 
 void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message msg) {

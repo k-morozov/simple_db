@@ -16,7 +16,7 @@ public:
 
 	void send_once(Timestamp timestamp, msg::Message out);
 	Handle schedule(Timestamp timestamp, msg::Message out);
-	void get_ready(Timestamp timestamp,
+	void get_outgoing_msgs(const Timestamp ts,
 						   Messages* messages);
 
 private:

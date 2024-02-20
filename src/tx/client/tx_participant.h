@@ -58,6 +58,8 @@ public:
 
 	size_t completed_puts() const { return completed_puts_; }
 
+	void export_results(std::vector<std::pair<Key, Value>>* puts) const;
+
 private:
 	const ActorID client_tx_actor_id_;
 	const ActorID coordinator_actor_id_;
@@ -71,7 +73,6 @@ private:
 	std::vector<RequestState> put_status_;
 
 	size_t next_put_{0};
-
 	size_t completed_puts_{0};
 
 	// @todo rename

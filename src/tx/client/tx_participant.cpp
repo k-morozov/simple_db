@@ -143,7 +143,7 @@ void TxParticipant::process_replies_open(const Messages& msgs) {
 							<< ", completed_puts=" << completed_puts_;
 					}
 				} else {
-					// log error
+					LOG_ERROR << "[TxParticipant::process_replies_open] not found original_msg_id in put_request";
 				}
 				break;
 			}
@@ -159,6 +159,15 @@ void TxParticipant::issue_put(Key key, Value value) {
 		.key=key,
 		.value=value
 	});
+}
+
+void TxParticipant::export_results(std::vector<std::pair<Key, Value>>* puts) const {
+	for(const auto& status:put_status_) {
+		if (status.status != RequestState::Status::REQUEST_COMPLETED) {
+			continue;
+		}
+		puts->push_back(std::make_pair(status.key, status.value));
+	}
 }
 
 } // namespace sdb::tx::client

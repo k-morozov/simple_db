@@ -184,7 +184,7 @@ void ClientTx::tick(const Timestamp ts,
 		participant->maybe_issue_requests(ts);
 	}
 
-	retrier_->get_ready(ts, msg_out);
+	retrier_->get_outgoing_msgs(ts, msg_out);
 }
 
 void ClientTx::configure_coordinator(const Timestamp ts) {
@@ -239,6 +239,20 @@ size_t ClientTx::completed_requests() {
 		puts_completed_requests += participant->completed_puts();
 	}
 	return puts_completed_requests;
+}
+
+ClientTx::ExportResult ClientTx::export_results() const {
+	ClientTx::ExportResult exp;
+
+	exp.txid = txid_;
+	exp.read_ts = read_ts_;
+	exp.commit_ts = commit_ts_;
+
+	for(const auto& [actor_id, p] : participants_) {
+		p->export_results(&exp.puts);
+	}
+
+	return exp;
 }
 
 } // namespace sdb::tx::client

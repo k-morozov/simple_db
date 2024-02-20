@@ -9,6 +9,7 @@ add_executable(${TEST_APP_NAME}
         test_tx_runtime.cpp
         test_tx_msg.cpp
         test_tx_state.cpp
+        test_client_tx.cpp
 )
 
 target_link_libraries(${TEST_APP_NAME}
