@@ -12,7 +12,7 @@
 #include <tx/retrier/retrier.h>
 #include <tx/storage/storage.h>
 
-namespace sdb::tx {
+namespace sdb::tx::server {
 
 namespace {
 
@@ -42,8 +42,8 @@ ServerTX::ServerTX(ActorID clientID, Storage *storage, Retrier* retrier):
 	LOG_DEBUG << "ServerTX with clientID=" << clientID << " created";
 }
 
-void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* outgoing_msgs) {
-	assert(outgoing_msgs);
+void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* scheduled_msgs) {
+	assert(scheduled_msgs);
 
 	for(auto& msg : msgs) {
 		LOG_DEBUG << "[ServerTX::tick] state=" << to_string(state_)
@@ -62,15 +62,16 @@ void ServerTX::tick(const Timestamp ts, Messages msgs, Messages* outgoing_msgs) 
 		}
 	}
 
-	retrier_->get_outgoing_msgs(ts, outgoing_msgs);
+	retrier_->get_scheduled_msgs(ts, scheduled_msgs);
 }
 
 void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message msg) {
-	LOG_DEBUG << "[ServerTX::process_msg_not_started] called with ts=" << ts
-		<< " msg=" << msg;
+	LOG_DEBUG << "[ServerTX::process_msg_not_started][read_ts=" << read_ts_
+		<< "] called with ts=" << ts << " msg=" << msg;
 
 	switch (msg.type) {
 		case msg::MessageType::MSG_START: {
+			assert(read_ts_ == UNDEFINED_TS);
 			read_ts_ = ts;
 			txid_ = msg.payload.get<msg::MsgStartPayload>().txid;
 
@@ -80,7 +81,7 @@ void ServerTX::process_msg_not_started(const Timestamp ts, const msg::Message ms
 			const auto destination_for_ack = msg.source;
 
 			const auto ack_msg = msg::CreateMsgStartAck(source_for_ack, destination_for_ack, txid_, read_ts_);
-			LOG_DEBUG << "[ServerTX::process_msg_not_started] send ack: " << ack_msg;
+			LOG_DEBUG << "[ServerTX::process_msg_not_started] schedule ack: " << ack_msg;
 
 			[[maybe_unused]]
 			auto handle = retrier_->schedule(read_ts_, ack_msg);
@@ -170,4 +171,4 @@ void ServerTX::report_unexpected_msg(const msg::Message msg) {
 }
 
 
-} // namespace sdb::tx
+} // namespace sdb::tx::server

@@ -45,6 +45,9 @@ bool operator<(const Message& lhs, const Message& rhs);
 
 TxID get_txid_from_msg_payload(const msg::Message& msg);
 
+/*
+ * CreateMsgStart generates a txid.
+ */
 Message CreateMsgStart(ActorID source, ActorID destination);
 // @todo create from msg
 Message CreateMsgStartAck(ActorID source, ActorID destination, TxID txid, Timestamp read_ts);

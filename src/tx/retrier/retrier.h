@@ -16,11 +16,11 @@ public:
 
 	void send_once(Timestamp timestamp, msg::Message out);
 	Handle schedule(Timestamp timestamp, msg::Message out);
-	void get_outgoing_msgs(const Timestamp ts,
-						   Messages* messages);
+	void get_scheduled_msgs(Timestamp ts,
+							Messages* messages);
 
 private:
-	Messages outgoing_;
+	Messages schedule_msgs_;
 };
 
 } // namespace sdb::tx

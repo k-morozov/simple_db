@@ -86,7 +86,7 @@ ClientTx::ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discov
 
 void ClientTx::tick(const Timestamp ts,
 					const Messages& msgs,
-					Messages* msg_out) {
+					Messages* scheduled_msgs) {
 	Messages external_msgs;
 	std::unordered_map<ActorID, Messages> reply_messages_per_actor;
 	
@@ -113,10 +113,10 @@ void ClientTx::tick(const Timestamp ts,
 		case ClientTXState::NOT_STARTED: {
 			assert(msgs.empty());
 
-			// we started work with tx not before earliest_start_ts in tx spec.
+			// we started work with tx after earliest_start_ts in tx spec.
 			if (ts >= spec_.earliest_start_ts) {
 				LOG_DEBUG << "[ClientTx::tick] ts=" << ts << " is greater/equal than earliest_start_ts=" << spec_.earliest_start_ts
-					<< ", start configure coordinator.";
+					<< ", schedule_start_msg configure coordinator.";
 
 				configure_coordinator(ts);
 				progress_state(&state_);
@@ -185,7 +185,7 @@ void ClientTx::tick(const Timestamp ts,
 		participant->maybe_issue_requests(ts);
 	}
 
-	retrier_->get_outgoing_msgs(ts, msg_out);
+	retrier_->get_scheduled_msgs(ts, scheduled_msgs);
 }
 
 void ClientTx::configure_coordinator(const Timestamp ts) {
@@ -195,11 +195,12 @@ void ClientTx::configure_coordinator(const Timestamp ts) {
 	participants_[coordinator_actor_id_] = std::make_unique<TxParticipant>(
 			get_actor_id(), coordinator_actor_id_, retrier_);
 
-	participants_[coordinator_actor_id_]->start(ts);
+	participants_[coordinator_actor_id_]->schedule_start_msg(ts);
 
 	txid_ = participants_[coordinator_actor_id_]->txid();
 
-	LOG_DEBUG << "[ClientTx::configure_coordinator] finished for txid=" << txid_;
+	LOG_DEBUG << "[ClientTx::configure_coordinator] finished for txid=" << txid_
+		<< ", start msg scheduled.";
 }
 
 void ClientTx::configure_read_ts() {

@@ -8,7 +8,7 @@ add_executable(${TEST_APP_NAME}
         test_marshal.cpp
         test_tx_runtime.cpp
         test_tx_msg.cpp
-        test_tx_state.cpp
+        test_full_tx.cpp
         test_client_tx.cpp
 )
 

@@ -41,12 +41,12 @@ ActorID Client::get_actor_id() const {
 	return actor_id_;
 }
 
-void Client::send_on_tick(Clock& clock, Messages&& msgs) {
+void Client::on_tick(Clock& clock, Messages&& msgs) {
 	std::unordered_map<TxID, Messages> messages_per_tx;
 
 	for(const auto& msg : msgs) {
 		const auto txid = msg::get_txid_from_msg_payload(msg);
-		LOG_DEBUG << "[Client::send_on_tick] msg_id=" << msg.msg_id
+		LOG_DEBUG << "[Client::on_tick] msg_id=" << msg.msg_id
 			<< " has txid=" << txid;
 
 		if (txid != UNDEFINED_TX_ID) {
@@ -54,11 +54,11 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 		}
 	}
 
-	Messages outgoing_msgs;
+	Messages scheduled_msgs;
 
 	for(const auto& tx : transactions_) {
 		const auto txid = tx->get_tx_id();
-		LOG_DEBUG << "[Client::send_on_tick][txid=" << txid << "] process.";
+		LOG_DEBUG << "[Client::on_tick][txid=" << txid << "] process.";
 		Messages  tx_msgs;
 
 		if (txid != UNDEFINED_TX_ID) {
@@ -68,14 +68,14 @@ void Client::send_on_tick(Clock& clock, Messages&& msgs) {
 			}
 		}
 
-		tx->tick(clock.next(), tx_msgs, &outgoing_msgs);
+		tx->tick(clock.next(), tx_msgs, &scheduled_msgs);
 	}
 
 //	for(const auto& [txid, tx_msgs] : messages_per_tx) {
 //		assert(tx_msgs.empty());
 //	}
 
-	for(auto& msg : outgoing_msgs) {
+	for(auto& msg : scheduled_msgs) {
 		proxy_.send(msg);
 	}
 }

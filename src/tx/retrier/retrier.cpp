@@ -13,7 +13,7 @@ namespace sdb::tx {
 
 void Retrier::send_once([[maybe_unused]] const Timestamp ts,
 						const msg::Message msg) {
-	outgoing_.push_back(msg);
+	schedule_msgs_.push_back(msg);
 }
 
 Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
@@ -21,16 +21,16 @@ Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
 	return -1;
 }
 
-void Retrier::get_outgoing_msgs(const Timestamp ts,
-								Messages* messages) {
-	LOG_DEBUG << "[Retrier::get_outgoing_msgs] call";
+void Retrier::get_scheduled_msgs(const Timestamp ts,
+								 Messages* messages) {
+	LOG_DEBUG << "[Retrier::get_scheduled_msgs] call";
 	assert(messages);
-	messages->reserve(messages->size() + outgoing_.size());
+	messages->reserve(messages->size() + schedule_msgs_.size());
 
-	for(auto& msg : outgoing_) {
+	for(auto& msg : schedule_msgs_) {
 		messages->push_back(msg);
 	}
-	outgoing_.clear();
+	schedule_msgs_.clear();
 }
 
 } // namespace sdb::tx

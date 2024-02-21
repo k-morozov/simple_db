@@ -26,11 +26,11 @@ std::ostream& operator<<(std::ostream& stream, const TxParticipantState state) {
 		case TxParticipantState::NOT_STARTED:
 			stream << "NOT_STARTED";
 			break;
-		case TxParticipantState::START_SENT:
-			stream << "START_SENT";
+		case TxParticipantState::START_MSG_SENT:
+			stream << "START_MSG_SENT";
 			break;
-		case TxParticipantState::OPEN:
-			stream << "OPEN";
+		case TxParticipantState::TX_OPEN:
+			stream << "TX_OPEN";
 			break;
 	}
 	return stream;
@@ -46,19 +46,19 @@ TxParticipant::TxParticipant(const ActorID client_tx_actor_id,
 	LOG_SELF_DEBUG << "created.";
 }
 
-void TxParticipant::start(const Timestamp ts) {
+void TxParticipant::schedule_start_msg(Timestamp ts) {
 	auto create_msg = msg::CreateMsgStart(client_tx_actor_id_, coordinator_actor_id_);
 	txid_ = msg::get_txid_from_msg_payload(create_msg);
 
-	LOG_DEBUG << "[TxParticipant::start] create and send " << create_msg;
+	LOG_DEBUG << "[TxParticipant::schedule_start_msg] create and schedule " << create_msg;
 
 	assert(txid_ != UNDEFINED_TX_ID);
 
 	retrier_->schedule(ts, create_msg);
 
-	LOG_DEBUG << "[TxParticipant::start] change state to " << TxParticipantState::START_SENT;
+	LOG_DEBUG << "[TxParticipant::schedule_start_msg] change state to " << TxParticipantState::START_MSG_SENT;
 
-	state_ = TxParticipantState::START_SENT;
+	state_ = TxParticipantState::START_MSG_SENT;
 }
 
 TxID TxParticipant::txid() const {
@@ -73,17 +73,18 @@ void TxParticipant::process_incoming(const Timestamp ts, const Messages &msgs) {
 	switch (state_) {
 		case TxParticipantState::NOT_STARTED:
 			throw std::invalid_argument("process_incoming not working with NOT_STARTED state");
-		case TxParticipantState::START_SENT:
+		case TxParticipantState::START_MSG_SENT:
 			process_replies_start_sent(msgs);
 			break;
-		case TxParticipantState::OPEN:
+		case TxParticipantState::TX_OPEN:
 			process_replies_open(msgs);
 	}
 }
 
 void TxParticipant::maybe_issue_requests(const Timestamp ts) {
-	if(state_ != TxParticipantState::OPEN) {
-		LOG_DEBUG << "[TxParticipant::maybe_issue_requests] available only in OPEN state";
+	if(state_ != TxParticipantState::TX_OPEN) {
+		LOG_DEBUG << "[TxParticipant::maybe_issue_requests][state=" << state_
+			<< "] available only in OPEN state";
 		return;
 	}
 
@@ -98,6 +99,11 @@ void TxParticipant::maybe_issue_requests(const Timestamp ts) {
 }
 
 void TxParticipant::process_replies_start_sent(const Messages &msgs) {
+	if (msgs.empty()) {
+		LOG_DEBUG << "[TxParticipant::process_replies_start_sent] msgs is empty. skip.";
+		return;
+	}
+
 	Timestamp ts{UNDEFINED_TS};
 
 	for(const auto& msg : msgs) {
@@ -112,15 +118,11 @@ void TxParticipant::process_replies_start_sent(const Messages &msgs) {
 	}
 
 	assert(read_ts_ == UNDEFINED_TS);
-
-	if (ts == UNDEFINED_TS) {
-		LOG_DEBUG << "[TxParticipant::process_replies_start_sent] undefined ts. skip.";
-		return;
-	}
+	assert(ts != UNDEFINED_TS);
 
 	read_ts_ = ts;
 
-	constexpr auto next_state = TxParticipantState::OPEN;
+	constexpr auto next_state = TxParticipantState::TX_OPEN;
 
 	LOG_DEBUG << "[TxParticipant::process_replies_start_sent]"
 		<< " setup read_ts=" << read_ts_

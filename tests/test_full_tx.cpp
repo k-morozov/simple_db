@@ -35,13 +35,13 @@ bool LightCmpMsg(const Message& lhs, const Message& rhs) {
 	return true;
 }
 
-class TxStateFixture : public ::testing::Test {
+class TxFixture : public ::testing::Test {
 public:
 	void SetUp() override {
 		runtime = std::make_shared<Runtime>();
 		server_actor_id = builder();
 		proxy_server = std::make_unique<ProxyRuntime>(runtime, server_actor_id);
-		server = std::make_unique<Server>(server_actor_id, KeyIntervals{}, *proxy_server);
+		server = std::make_unique<server::Server>(server_actor_id, KeyIntervals{}, *proxy_server);
 
 		ASSERT_NO_THROW(runtime->register_actor(server.get()));
 
@@ -60,31 +60,33 @@ public:
 	sdb::tx::ActorID server_actor_id;
 	std::unique_ptr<ProxyRuntime> proxy_server;
 
-	std::unique_ptr<Server> server;
+	std::unique_ptr<server::Server> server;
 	std::unique_ptr<Discovery> discovery;
-	client::TxSpec spec{
-		.earliest_start_ts=0,
-		.earliest_commit_ts=2,
-		.gets={},
-		.puts={
-			client::ClientTxPut{
-				.earliest_ts=2,
-				.key=17,
-				.value=1177
-			}
-		},
-		.action=client::TxSpec::Action::COMMIT
-	};
 };
 
-TEST_F(TxStateFixture, SimpleSendMsgStartFromActor) {
+TEST_F(TxFixture, SimpleSendMsgStartFromActor) {
 	const auto test_client_actor_id = builder();
 	auto proxy_client = ProxyRuntime(runtime, test_client_actor_id);
+
+	client::TxSpec spec{
+			.earliest_start_ts=0,
+			.earliest_commit_ts=2,
+			.gets={},
+			.puts={
+					client::ClientTxPut{
+							.earliest_ts=2,
+							.key=17,
+							.value=1177
+					}
+			},
+			.action=client::TxSpec::Action::COMMIT
+	};
+
 	client::Client client(test_client_actor_id, {spec}, discovery.get(), proxy_client);
 
 	ASSERT_NO_THROW(runtime->register_actor(&client));
 
-	runtime->run(100);
+	runtime->run(10);
 
 	const auto res = client.get_tx(0)->export_results();
 

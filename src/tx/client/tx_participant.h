@@ -15,8 +15,8 @@ namespace sdb::tx::client {
 
 enum class TxParticipantState {
 	NOT_STARTED,
-	START_SENT,
-	OPEN,
+	START_MSG_SENT,
+	TX_OPEN,
 };
 
 std::ostream& operator<<(std::ostream& stream, TxParticipantState state);
@@ -43,10 +43,10 @@ public:
 				  Retrier* retrier);
 
 	// Ask the server for a read_ts.
-	void start(Timestamp ts);
+	void schedule_start_msg(Timestamp ts);
 
-	bool is_open() const noexcept { return state_ == TxParticipantState::OPEN; }
-	Timestamp read_ts() const noexcept { /*assert(read_ts_ != UNDEFINED_TS);*/ return read_ts_; }
+	bool is_open() const noexcept { return state_ == TxParticipantState::TX_OPEN; }
+	Timestamp read_ts() const noexcept { assert(read_ts_ != UNDEFINED_TS); return read_ts_; }
 
 	TxID txid() const;
 
