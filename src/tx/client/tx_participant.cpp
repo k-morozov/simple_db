@@ -88,14 +88,12 @@ void TxParticipant::maybe_issue_requests(const Timestamp ts) {
 		return;
 	}
 
-	for(; next_put_ < put_status_.size(); next_put_++) {
-		put_status_[next_put_].status = RequestState::Status::REQUEST_START;
-
-		auto msg = msg::CreateMsgPut(client_tx_actor_id_, coordinator_actor_id_, txid_,
-									 put_status_[next_put_].key, put_status_[next_put_].value);
-		retrier_->schedule(ts, msg);
-		put_request_[msg.msg_id] = next_put_;
-	}
+	req_manager_.prepare_msg(client_tx_actor_id_, coordinator_actor_id_, txid_,
+		[this, ts](msg::Message&& msg){
+			LOG_DEBUG << "[TxParticipant::maybe_issue_requests][state=" << state_
+					  << "] scheduled ts=" << ts << ", " << msg;
+			retrier_->schedule(ts, std::move(msg));
+		});
 }
 
 void TxParticipant::process_replies_start_sent(const Messages &msgs) {
@@ -139,19 +137,7 @@ void TxParticipant::process_replies_open(const Messages& msgs) {
 		switch (msg.type) {
 			case msg::MessageType::MSG_PUT_REPLY: {
 				const auto original_msg_id = msg.payload.get<msg::MsgPutReplyPayload>().msg_id;
-				if (put_request_.contains(original_msg_id)) {
-					const auto old_next_put = put_request_[original_msg_id];
-					if (put_status_[old_next_put].status == RequestState::Status::REQUEST_START) {
-						put_status_[old_next_put].status = RequestState::Status::REQUEST_COMPLETED;
-						completed_puts_++;
-
-						LOG_DEBUG << "[TxParticipant::process_replies_open]"
-							<< " old_next_put=" << old_next_put << " set status REQUEST_COMPLETED"
-							<< ", completed_puts=" << completed_puts_;
-					}
-				} else {
-					LOG_ERROR << "[TxParticipant::process_replies_open] not found original_msg_id in put_request";
-				}
+				req_manager_.complete_request(original_msg_id);
 				break;
 			}
 			default:
@@ -161,20 +147,11 @@ void TxParticipant::process_replies_open(const Messages& msgs) {
 }
 
 void TxParticipant::issue_put(Key key, Value value) {
-	put_status_.push_back(RequestState{
-		.status=RequestState::Status::REQUEST_NOT_STARTED,
-		.key=key,
-		.value=value
-	});
+	req_manager_.add_put(key, value);
 }
 
 void TxParticipant::export_results(std::vector<std::pair<Key, Value>>* puts) const {
-	for(const auto& status:put_status_) {
-		if (status.status != RequestState::Status::REQUEST_COMPLETED) {
-			continue;
-		}
-		puts->push_back(std::make_pair(status.key, status.value));
-	}
+	req_manager_.export_results(puts);
 }
 
 } // namespace sdb::tx::client
