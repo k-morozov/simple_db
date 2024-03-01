@@ -26,6 +26,8 @@ void RequestsManager::complete_request(const MsgID original_msg_id) {
 
 
 void RequestsManager::add_put(Key key, Value value) {
+	LOG_DEBUG << "[RequestsManager::add_put] add request to puts_table_status with key="
+		<< key << " and value=" << value;
 	puts_table_status_.push_back(RequestState{
 			.status=RequestState::Status::REQUEST_NOT_STARTED,
 			.key=key,

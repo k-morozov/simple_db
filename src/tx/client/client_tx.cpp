@@ -87,6 +87,8 @@ ClientTx::ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discov
 void ClientTx::tick(const Timestamp ts,
 					const Messages& msgs,
 					Messages* scheduled_msgs) {
+	LOG_SELF_DEBUG << "[ts=" << ts << "] call tick";
+
 	Messages external_msgs;
 	std::unordered_map<ActorID, Messages> reply_messages_per_actor;
 	
@@ -206,7 +208,8 @@ void ClientTx::configure_coordinator(const Timestamp ts) {
 void ClientTx::configure_read_ts() {
 	read_ts_ = participants_[coordinator_actor_id_]->read_ts();
 	LOG_DEBUG << "[ClientTx::configure_read_ts][state=" << state_ << "]"
-			  << " setup read_ts=" << read_ts_;
+			  << " setup read_ts=" << read_ts_
+			  << ". We will send get/put requests in the next tick.";
 }
 
 void ClientTx::process_replies_start_sent(const Messages& msgs) {
@@ -230,6 +233,7 @@ void ClientTx::process_replies_commit_sent(const Messages& msgs) {
 				break;
 			}
 			default:
+				LOG_ERROR << "[ClientTx::process_replies_commit_sent] got " << msg;
 				throw std::logic_error("process_replies_commit_sent: broken case.");
 		}
 	}

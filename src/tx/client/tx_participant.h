@@ -22,17 +22,6 @@ enum class TxParticipantState {
 
 std::ostream& operator<<(std::ostream& stream, TxParticipantState state);
 
-//struct RequestState final {
-//	enum class Status {
-//		REQUEST_NOT_STARTED,
-//		REQUEST_START,
-//		REQUEST_COMPLETED
-//	};
-//	Status status{Status::REQUEST_NOT_STARTED};
-//	Key key;
-//	Value value;
-//};
-
 class TxParticipant final {
 public:
 	friend std::ostream& operator<<(std::ostream& stream, TxParticipant self);

@@ -23,8 +23,9 @@ Retrier::Handle Retrier::schedule(const Timestamp ts, const msg::Message msg) {
 
 void Retrier::get_scheduled_msgs(const Timestamp ts,
 								 Messages* messages) {
-	LOG_DEBUG << "[Retrier::get_scheduled_msgs] call";
 	assert(messages);
+	LOG_DEBUG << "[Retrier::get_scheduled_msgs][ts=" << ts << "] call with " << messages->size() << " messages";
+
 	messages->reserve(messages->size() + schedule_msgs_.size());
 
 	for(auto& msg : schedule_msgs_) {
