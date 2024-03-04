@@ -49,8 +49,11 @@ private:
 		Key key;
 		Value value;
 	};
+    friend std::ostream& operator<<(std::ostream& os, const ServerTX::DataPut& put);
 	std::vector<DataPut> puts_;
 };
+
+
 
 
 } // namespace sdb::tx::server

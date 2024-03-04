@@ -3,93 +3,100 @@
 //
 #pragma once
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-
-#include <tx/types.h>
-#include <tx/client/tx_spec.h>
 #include <tx/client/tx_participant.h>
-#include <tx/retrier/retrier.h>
+#include <tx/client/tx_spec.h>
 #include <tx/discovery/discovery.h>
+#include <tx/retrier/retrier.h>
+#include <tx/types.h>
+
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace sdb::tx::client {
 
-enum class ClientTXState {
-	// Initial state, before Start message is sent.
-	NOT_STARTED,
+    enum class ClientTXState {
+        // Initial state, before Start message is sent.
+        NOT_STARTED,
 
-	// Start message has been sent, and txid assigned.
-	START_SENT,
+        // Start message has been sent, and txid assigned.
+        START_SENT,
 
-	// Coordinator replied with StartAck and provided read_timestamp.
-	OPEN,
+        // Coordinator replied with StartAck and provided read_timestamp.
+        OPEN,
 
-	COMMIT_SENT,
+        COMMIT_SENT,
 
-	COMMITTED,
-};
+        COMMITTED,
 
-std::ostream& operator<<(std::ostream& stream, const ClientTXState& state);
-void progress_state(ClientTXState* state);
+        ROLLBACK
+    };
 
-class ClientTx final {
-public:
-	friend std::ostream& operator<<(std::ostream& stream, const ClientTx& self);
+    std::ostream &operator<<(std::ostream &stream, const ClientTXState &state);
 
-	struct ExportResult {
-		using KeyValue = std::pair<Key, Value>;
+    void progress_state(ClientTXState *state);
 
-		TxID txid;
+    class ClientTx final {
+    public:
+        friend std::ostream &operator<<(std::ostream &stream, const ClientTx &self);
 
-		Timestamp read_ts;
-		Timestamp commit_ts;
+        struct ExportResult {
+            using KeyValue = std::pair<Key, Value>;
 
-		std::vector<KeyValue> gets;
-		std::vector<KeyValue> puts;
-	};
+            TxID txid;
 
-	ClientTx(ActorID actor_id, const TxSpec& spec, const Discovery* discovery, Retrier* retrier);
+            Timestamp read_ts;
+            Timestamp commit_ts;
 
-	void tick(Timestamp ts, const Messages& msgs, Messages* msg_out);
+            std::vector<KeyValue> gets;
+            std::vector<KeyValue> puts;
+        };
 
-	ActorID get_actor_id() const noexcept { return actor_id_; }
-	TxID get_tx_id() const noexcept { return txid_;}
+        ClientTx(ActorID actor_id, const TxSpec &spec, const Discovery *discovery,
+                 Retrier *retrier);
 
-	ClientTXState get_state() const { return state_; }
+        void tick(Timestamp ts, const Messages &msgs, Messages *msg_out);
 
-	ExportResult export_results() const;
+        ActorID get_actor_id() const noexcept { return actor_id_; }
 
-private:
-	const ActorID actor_id_;
-	const TxSpec spec_;
-	const Discovery* discovery_;
-	Retrier* retrier_;
+        TxID get_tx_id() const noexcept { return txid_; }
 
-	ClientTXState state_{ClientTXState::NOT_STARTED};
+        ClientTXState get_state() const { return state_; }
 
-	ActorID coordinator_actor_id_{UNDEFINED_ACTOR_ID};
+        ExportResult export_results() const;
 
-	std::unordered_map<ActorID, std::unique_ptr<TxParticipant>> participants_;
+    private:
+        const ActorID actor_id_;
+        const TxSpec spec_;
+        const Discovery *discovery_;
+        Retrier *retrier_;
 
-	TxID txid_{UNDEFINED_TX_ID};
+        ClientTXState state_{ClientTXState::NOT_STARTED};
 
-	Timestamp read_ts_{UNDEFINED_TS};
-	Timestamp commit_ts_{UNDEFINED_TS};
+        ActorID coordinator_actor_id_{UNDEFINED_ACTOR_ID};
 
-	size_t next_get_{0};
-	size_t next_put_{0};
+        std::unordered_map<ActorID, std::unique_ptr<TxParticipant>> participants_;
 
-private:
-	void configure_coordinator(Timestamp ts);
-	void configure_read_ts();
+        TxID txid_{UNDEFINED_TX_ID};
 
-	void process_replies_start_sent(const Messages& msgs);
-	void process_replies_open(const Messages& msgs);
-	void process_replies_commit_sent(const Messages& msgs);
+        Timestamp read_ts_{UNDEFINED_TS};
+        Timestamp commit_ts_{UNDEFINED_TS};
 
-	size_t completed_requests();
-};
+        size_t next_get_{0};
+        size_t next_put_{0};
 
+    private:
+        void configure_coordinator(Timestamp ts);
 
-} // namespace sdb::tx::client
+        void configure_read_ts();
+
+        void process_replies_start_sent(const Messages &msgs);
+
+        void process_replies_open(const Messages &msgs);
+
+        void process_replies_commit_sent(const Messages &msgs);
+
+        size_t completed_requests();
+    };
+
+}  // namespace sdb::tx::client
