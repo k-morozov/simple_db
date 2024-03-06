@@ -30,8 +30,8 @@ namespace sdb::tx::client {
             case ClientTXState::COMMITTED:
                 stream << "COMMITTED";
                 break;
-            case ClientTXState::ROLLBACK:
-                stream << "ROLLBACK";
+            case ClientTXState::ROLLED_BACK_BY_SERVER:
+                stream << "ROLLED_BACK_BY_SERVER";
                 break;
         }
         return stream;
@@ -65,20 +65,11 @@ namespace sdb::tx::client {
                 // @TODO think
                 LOG_DEBUG << "[ClientTx::tick] current state is COMMITTED already. skip.";
                 break;
-        }
-    }
-
-    void progress_rollback_state(ClientTXState *state) {
-        assert(state);
-
-        switch (*state) {
-            case ClientTXState::COMMIT_SENT:
+            case ClientTXState::ROLLED_BACK_BY_SERVER:
                 LOG_DEBUG << "[ClientTx::tick]"
-                          << " change state from COMMIT_SENT to ROLLBACK";
-                *state = ClientTXState::ROLLBACK;
+                          << " change state from COMMIT_SENT to ROLLED_BACK_BY_SERVER.";
+                *state = ClientTXState::COMMITTED;
                 break;
-            default:
-                throw std::invalid_argument("New state ROLLBACK can happens only from COMMIT_SENT");
         }
     }
 
@@ -201,7 +192,10 @@ namespace sdb::tx::client {
                 process_replies_commit_sent(msgs);
                 break;
             case ClientTXState::COMMITTED:
-                LOG_DEBUG << "[ClientTx::tick] a bug";
+                LOG_DEBUG << "[ClientTx::tick] ignore COMMITTED.";
+                break;
+            case ClientTXState::ROLLED_BACK_BY_SERVER:
+                LOG_DEBUG << "[ClientTx::tick] ignore ROLLED_BACK_BY_SERVER.";
                 break;
         }
 
@@ -249,12 +243,15 @@ namespace sdb::tx::client {
 
     void ClientTx::process_replies_commit_sent(const Messages &msgs) {
         for (const auto &msg: msgs) {
-            LOG_ERROR << "[ClientTx::process_replies_commit_sent] got " << msg;
+            LOG_DEBUG << "[ClientTx::process_replies_commit_sent] got " << msg;
 
             switch (msg.type) {
                 case msg::MessageType::MSG_ROLLED_BACK_BY_SERVER:
-                    // @TODO
-                    progress_rollback_state(&state_);
+                    state_ = ClientTXState::ROLLED_BACK_BY_SERVER;
+                    conflict_txid_ = msg.payload.get<msg::MsgRolledBackByServerPayload>().conflict_txid;
+
+                    LOG_DEBUG << "[ClientTx::tick]"
+                              << " change state from COMMIT_SENT to ROLLED_BACK_BY_SERVER, conflict_txid=" << conflict_txid_;
                     break;
 
                 case msg::MessageType::MSG_COMMIT_ACK: {
@@ -280,7 +277,10 @@ namespace sdb::tx::client {
     ClientTx::ExportResult ClientTx::export_results() const {
         ClientTx::ExportResult exp;
 
+        exp.state = state_;
         exp.txid = txid_;
+        exp.conflict_txid = conflict_txid_;
+
         exp.read_ts = read_ts_;
         exp.commit_ts = commit_ts_;
 

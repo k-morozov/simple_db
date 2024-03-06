@@ -29,7 +29,7 @@ namespace sdb::tx::client {
 
         COMMITTED,
 
-        ROLLBACK
+        ROLLED_BACK_BY_SERVER
     };
 
     std::ostream &operator<<(std::ostream &stream, const ClientTXState &state);
@@ -43,10 +43,13 @@ namespace sdb::tx::client {
         struct ExportResult {
             using KeyValue = std::pair<Key, Value>;
 
-            TxID txid;
+            ClientTXState state{ClientTXState::NOT_STARTED};
 
-            Timestamp read_ts;
-            Timestamp commit_ts;
+            TxID txid{UNDEFINED_TX_ID};
+            TxID conflict_txid{UNDEFINED_TX_ID};
+
+            Timestamp read_ts{UNDEFINED_TS};
+            Timestamp commit_ts{UNDEFINED_TS};
 
             std::vector<KeyValue> gets;
             std::vector<KeyValue> puts;
@@ -78,6 +81,7 @@ namespace sdb::tx::client {
         std::unordered_map<ActorID, std::unique_ptr<TxParticipant>> participants_;
 
         TxID txid_{UNDEFINED_TX_ID};
+        TxID conflict_txid_{UNDEFINED_TX_ID};
 
         Timestamp read_ts_{UNDEFINED_TS};
         Timestamp commit_ts_{UNDEFINED_TS};
