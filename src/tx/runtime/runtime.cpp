@@ -39,7 +39,7 @@ void Runtime::send(msg::Message msg) {
 
 void Runtime::run(const int ticks) {
 	for(int i=0; i<ticks; i++) {
-		LOG_DEBUG << "[Runtime::run] start tick=" << i;
+		LOG_DEBUG << "[Runtime::run] schedule_start_msg tick=" << i;
 		clear_destination_actor_messages();
 
 		timestamp_ = clock_.current();
@@ -87,7 +87,7 @@ void Runtime::send_to_actors() {
 		auto msgs = std::move(destination_actor_messages_[destination]);
 
 		LOG_DEBUG << "[Runtime::send_to_actors] Send " << msgs.size() << " msgs to actor_id= " << destination;
-		actor->send_on_tick(clock_, std::move(msgs));
+		actor->on_tick(clock_, std::move(msgs));
 	}
 }
 

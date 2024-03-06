@@ -28,7 +28,7 @@ public:
 
 	ActorID get_actor_id() const override;
 
-	void send_on_tick(Clock &clock, Messages &&msgs) override;
+	void on_tick(Clock &clock, Messages &&msgs) override;
 
 private:
 	const ActorID actor_id_;

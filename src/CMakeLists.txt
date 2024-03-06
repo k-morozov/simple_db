@@ -34,6 +34,7 @@ add_library(simple_db
         tx/client/client_tx.cpp
         tx/client/client.cpp
         tx/client/tx_participant.cpp
+        tx/client/requests_manager.cpp
 
         tx/msg/message.cpp
         tx/msg/msg_payload.cpp

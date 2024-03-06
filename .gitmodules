@@ -1,3 +1,4 @@
 [submodule "contrib/googletest"]
 	path = contrib/googletest
 	url = https://github.com/google/googletest.git
+    commit = e4fdb87e76b9fc4b01c54ad81aea19d6e994b994

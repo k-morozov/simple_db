@@ -7,7 +7,7 @@
 #include <common/log/log.h>
 #include <tx/clock/clock.h>
 
-namespace sdb::tx {
+namespace sdb::tx::server {
 
 Server::Server(ActorID actor_id,
 			   const KeyIntervals& key_intervals,
@@ -22,8 +22,8 @@ ActorID Server::get_actor_id() const {
 	return actor_id_;
 }
 
-void Server::send_on_tick(Clock& clock, Messages &&income_msgs) {
-	LOG_DEBUG << "[Server::send_on_tick] call.";
+void Server::on_tick(Clock& clock, Messages &&income_msgs) {
+	LOG_DEBUG << "[Server::on_tick] call.";
 	std::unordered_map<TxID, Messages> messages_per_tx;
 
 	for (const auto& msg : income_msgs) {
@@ -34,13 +34,13 @@ void Server::send_on_tick(Clock& clock, Messages &&income_msgs) {
 		messages_per_tx[txid].push_back(msg);
 	}
 
-	Messages outgoing_messages;
+	Messages scheduled_messages;
 	for(auto& [txid, tx_msgs] : messages_per_tx) {
 		auto* server_tx = get_or_create_tx(txid);
-		server_tx->tick(clock.next(), std::move(tx_msgs), &outgoing_messages);
+		server_tx->tick(clock.next(), std::move(tx_msgs), &scheduled_messages);
 	}
 
-	for(auto& msg : outgoing_messages) {
+	for(auto& msg : scheduled_messages) {
 		proxy_runtime_.send(msg);
 	}
 }
@@ -53,4 +53,4 @@ ServerTX* Server::get_or_create_tx(const TxID txid) {
 	return &transactions_.at(txid);
 }
 
-} // namespace sdb::tx
+} // namespace sdb::tx::server

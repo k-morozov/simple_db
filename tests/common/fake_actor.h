@@ -39,7 +39,7 @@ public:
 	sdb::tx::ActorID get_actor_id() const override {
 		return actor_id;
 	}
-	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
+	void on_tick(Clock &clock, Messages &&msgs) override {
 		std::move(std::begin(msgs), std::end(msgs), std::back_inserter(total));
 	}
 
@@ -58,23 +58,23 @@ public:
 			Client(actor_id, tx_specs, discovery, proxy)
 	{};
 
-	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
+	void on_tick(Clock &clock, Messages &&msgs) override {
 		total.clear();
 		std::copy(std::begin(msgs), std::end(msgs), std::back_inserter(total));
-		client::Client::send_on_tick(clock, std::move(msgs));
+		client::Client::on_tick(clock, std::move(msgs));
 	}
 
 	sdb::tx::Messages total;
 };
 
-class TestServer: public Server {
+class TestServer: public server::Server {
 public:
 	TestServer(ActorID actor_id, const KeyIntervals& key_intervals, ProxyRuntime runtime)
 		: Server(actor_id, key_intervals, runtime) {};
 
-	void send_on_tick(sdb::tx::Clock& clock, sdb::tx::Messages&& msgs) override {
+	void on_tick(Clock &clock, Messages &&msgs) override {
 		std::copy(std::begin(msgs), std::end(msgs), std::back_inserter(total));
-		Server::send_on_tick(clock, std::move(msgs));
+		Server::on_tick(clock, std::move(msgs));
 	}
 	sdb::tx::Messages total;
 };

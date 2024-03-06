@@ -9,9 +9,11 @@
 #include <tx/types.h>
 
 namespace sdb::tx {
+	class Storage;
+	class Retrier;
+}
 
-class Storage;
-class Retrier;
+namespace sdb::tx::server {
 
 enum class ServerTXState {
 	NOT_STARTED,
@@ -36,8 +38,8 @@ private:
 	ServerTXState state_{ServerTXState::NOT_STARTED};
 
 	TxID txid_{UNDEFINED_TX_ID};
-	Timestamp read_ts_;
-	Timestamp commit_ts_;
+	Timestamp read_ts_{UNDEFINED_TS};
+	Timestamp commit_ts_{UNDEFINED_TS};
 
 	void report_unexpected_msg(msg::Message msg);
 	void process_msg_not_started(Timestamp ts, msg::Message msg);
@@ -47,8 +49,11 @@ private:
 		Key key;
 		Value value;
 	};
+    friend std::ostream& operator<<(std::ostream& os, const ServerTX::DataPut& put);
 	std::vector<DataPut> puts_;
 };
 
 
-} // namespace sdb::tx
+
+
+} // namespace sdb::tx::server
